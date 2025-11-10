@@ -67,4 +67,4 @@ export default function TemperatureGraph({ readings, unit }: TemperatureGraphPro
       </div>
     </div>
   );
-}   
+}

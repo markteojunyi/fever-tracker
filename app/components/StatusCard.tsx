@@ -51,4 +51,4 @@ export default function StatusCard({ trend, unit }: StatusCardProps) {
       </div>
     </div>
   );
-}   
+}

@@ -1,3 +1,8 @@
+// ============================================
+// FILE: app/components/TemperatureEntry.tsx
+// Form to log a temperature reading
+// ============================================
+
 'use client';
 
 import { useState } from 'react';
@@ -31,8 +36,7 @@ export default function TemperatureEntry({ childId, onAddTemperature }: Temperat
 
     setIsSubmitting(true);
 
-    const newReading: TemperatureReading = {
-      id: uuidv4(),
+    const newReading: Omit<TemperatureReading, '_id'> = {
       childId,
       temperature: temp,
       temperatureUnit: unit,

@@ -1,3 +1,8 @@
+// ============================================
+// FILE: app/components/ChildSelector.tsx
+// Simple dropdown to select which child to track
+// ============================================
+
 'use client';
 
 import { Child } from '@/lib/types';
