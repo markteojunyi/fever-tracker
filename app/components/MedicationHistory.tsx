@@ -15,13 +15,13 @@ interface MedicationHistoryProps {
 }
 
 export default function MedicationHistory({ logs, medications }: MedicationHistoryProps) {
-    const [isClient, setIsClient] = useState(false);
-    
-    useEffect(() => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
     setIsClient(true);
-    }, []);
-  
-    if (logs.length === 0) {
+  }, []);
+
+  if (logs.length === 0) {
     return (
       <div className="bg-white p-4 rounded-lg shadow mb-4 text-center text-gray-500">
         No medication logs yet
@@ -44,7 +44,7 @@ export default function MedicationHistory({ logs, medications }: MedicationHisto
               <div>
                 <p className="font-semibold">{med?.name}</p>
                 <p className="text-sm text-gray-800">
-                {isClient ? formatDateTime(log.administeredAt) : '---'}
+                  {isClient ? formatDateTime(log.administeredAt) : '---'}
                 </p>
                 <p className="text-xs text-gray-700">Given by: {log.administeredBy}</p>
               </div>

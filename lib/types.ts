@@ -1,5 +1,6 @@
 export interface Child {
-  id: string;
+  _id?: string;
+  id?: string;
   name: string;
   dateOfBirth: string;
   weight?: number;
@@ -7,7 +8,8 @@ export interface Child {
 }
 
 export interface TemperatureReading {
-  id: string;
+  _id?: string;
+  id?: string;
   childId: string;
   temperature: number;
   temperatureUnit: 'C' | 'F';
@@ -17,7 +19,8 @@ export interface TemperatureReading {
 }
 
 export interface MedicationDefinition {
-  id: string;
+  _id?: string;
+  id?: string;
   childId: string;
   name: string;
   dosage: number;
@@ -31,7 +34,8 @@ export interface MedicationDefinition {
 }
 
 export interface MedicationLog {
-  id: string;
+  _id?: string;
+  id?: string;
   medicationDefinitionId: string;
   childId: string;
   administeredAt: string;
