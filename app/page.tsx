@@ -403,9 +403,15 @@ export default function Home() {
       {showAddMedicationForm && (
         <AddMedicationForm
           childId={selectedChildId}
-          onMedicationAdded={(newMed) => {
+          onMedicationAdded={async (newMed) => {
             setMedications([...medications, newMed]);
             setShowAddMedicationForm(false);
+            // Refresh medications from database
+            const medRes = await fetch(`/api/medications?childId=${selectedChildId}&isActive=true`);
+            if (medRes.ok) {
+              const medData = await medRes.json();
+              setMedications(medData);
+            }
           }}
           onClose={() => setShowAddMedicationForm(false)}
         />
