@@ -12,6 +12,7 @@ import TemperatureEntry from './components/TemperatureEntry';
 import TemperatureGraph from './components/TemperatureGraph';
 import MedicationEntry from './components/MedicationEntry';
 import MedicationHistory from './components/MedicationHistory';
+import AddMedicationForm from './components/AddMedicationForm';
 import {
   Child,
   TemperatureReading,
@@ -39,6 +40,7 @@ export default function Home() {
   const [newChildDOB, setNewChildDOB] = useState('');
   const [newChildWeight, setNewChildWeight] = useState('');
   const [addingChild, setAddingChild] = useState(false);
+  const [showAddMedicationForm, setShowAddMedicationForm] = useState(false);
 
   // Fetch all children on mount
   useEffect(() => {
@@ -352,6 +354,19 @@ export default function Home() {
           logsToday={logsToday}
           onAddLog={handleAddMedicationLog}
         />
+
+        {activeMeds.length === 0 && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-blue-700 font-bold mb-2">ℹ️ No Active Medications</p>
+            <p className="text-sm text-blue-600 mb-3">Add a medication to track dosages and set reminders.</p>
+            <button
+              onClick={() => setShowAddMedicationForm(true)}
+              className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600"
+            >
+              + Add First Medication
+            </button>
+          </div>
+        )}
 
         <MedicationHistory logs={medicationLogs} medications={activeMeds} />
 
