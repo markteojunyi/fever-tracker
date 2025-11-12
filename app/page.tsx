@@ -399,6 +399,17 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {showAddMedicationForm && (
+        <AddMedicationForm
+          childId={selectedChildId}
+          onMedicationAdded={(newMed) => {
+            setMedications([...medications, newMed]);
+            setShowAddMedicationForm(false);
+          }}
+          onClose={() => setShowAddMedicationForm(false)}
+        />
+      )}
     </main>
   );
 }
