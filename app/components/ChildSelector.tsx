@@ -27,7 +27,7 @@ export default function ChildSelector({
         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         {children.map((child) => (
-          <option key={child.id} value={child.id}>
+          <option key={child._id} value={child._id}>
             {child.name}
           </option>
         ))}

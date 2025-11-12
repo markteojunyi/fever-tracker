@@ -74,11 +74,15 @@ export default function Home() {
 
   const fetchChildData = async (childId: string) => {
     try {
+      if (!childId) return;
+      
       const tempRes = await fetch(`/api/temperatures?childId=${childId}`);
       if (tempRes.ok) {
         const tempData = await tempRes.json();
         setTemperatures(tempData);
       }
+
+      if (!selectedChildId) return;
 
       const medRes = await fetch(`/api/medications?childId=${childId}&isActive=true`);
       if (medRes.ok) {
@@ -400,18 +404,25 @@ export default function Home() {
         </div>
       </div>
 
-      {showAddMedicationForm && (
+        {showAddMedicationForm && (
         <AddMedicationForm
           childId={selectedChildId}
-          onMedicationAdded={async (newMed) => {
-            setMedications([...medications, newMed]);
+          onMedicationAdded={(newMed) => {
+            if (!selectedChildId) return;
+            
             setShowAddMedicationForm(false);
+            
             // Refresh medications from database
-            const medRes = await fetch(`/api/medications?childId=${selectedChildId}&isActive=true`);
-            if (medRes.ok) {
-              const medData = await medRes.json();
-              setMedications(medData);
-            }
+            const medRes = fetch(`/api/medications?childId=${selectedChildId}&isActive=true`);
+            medRes.then(res => {
+              if (res.ok) {
+                return res.json();
+              }
+            }).then(medData => {
+              if (medData) {
+                setMedications(medData);
+              }
+            });
           }}
           onClose={() => setShowAddMedicationForm(false)}
         />
