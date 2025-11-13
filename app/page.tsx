@@ -372,6 +372,15 @@ export default function Home() {
           </div>
         )}
 
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setShowAddMedicationForm(true)}
+            className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600"
+          >
+            + Add Another Medication
+          </button>
+        </div>
+
         <MedicationHistory logs={medicationLogs} medications={activeMeds} />
 
         <div className="bg-white p-4 rounded-lg shadow">

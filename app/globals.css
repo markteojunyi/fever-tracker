@@ -40,8 +40,8 @@ button,
 input,
 select,
 textarea {
-  color: #000000 !important;
-}
+  color: #000000 !important; 
+} 
 
 /* Input fields - dark text on light background */
 input,
