@@ -381,6 +381,22 @@ export default function Home() {
           </button>
         </div>
 
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setShowAddMedicationForm(true)}
+            className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600"
+          >
+            + Add a Medication Entry
+          </button>
+        </div>
+
+        <MedicationEntry
+          childId={selectedChildId}
+          medications={activeMeds}
+          logsToday={logsToday}
+          onAddLog={handleAddMedicationLog}
+        />
+
         <MedicationHistory logs={medicationLogs} medications={activeMeds} />
 
         <div className="bg-white p-4 rounded-lg shadow">
