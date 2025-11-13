@@ -25,14 +25,22 @@ export default function TemperatureGraph({ readings, unit }: TemperatureGraphPro
   // Format data for chart
   const chartData = readings
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    .map((r) => ({
-      timestamp: new Date(r.timestamp).toLocaleTimeString('en-US', {
+    .map((r) => {
+      const date = new Date(r.timestamp);
+      const dateStr = date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+      const timeStr = date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
-      }),
-      temperature: r.temperature,
-      fullTime: r.timestamp,
-    }));
+      });
+      return {
+        timestamp: `${dateStr}\n${timeStr}`,
+        temperature: r.temperature,
+        fullTime: r.timestamp,
+      };
+    });
 
   // Define reference lines
   const normalMax = unit === 'C' ? 37.5 : 99.5;
@@ -44,7 +52,7 @@ export default function TemperatureGraph({ readings, unit }: TemperatureGraphPro
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="timestamp" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
+          <XAxis dataKey="timestamp" tick={{ fontSize: 12 }} angle={0} textAnchor="middle" height={60} />
           <YAxis domain={[35, 41]} label={{ value: `°${unit}`, angle: -90, position: 'insideLeft' }} />
           <Tooltip
             formatter={(value) => [`${value}°${unit}`, 'Temperature']}

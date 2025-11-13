@@ -381,14 +381,16 @@ export default function Home() {
           </button>
         </div>
 
+        {/* There is this missing section that claude can't seem to figure out. I need a button here!
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setShowAddMedicationForm(true)}
             className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600"
           >
-            + Add a Medication Entry
+            + Add Another Medication
           </button>
         </div>
+        */}
 
         <MedicationEntry
           childId={selectedChildId}
