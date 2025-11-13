@@ -5,13 +5,41 @@
 
 'use client';
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import { TemperatureReading } from '@/lib/types';
 
 interface TemperatureGraphProps {
   readings: TemperatureReading[];
   unit: 'C' | 'F';
 }
+
+// Custom tick renderer for multi-line labels
+const CustomTick: React.FC<any> = ({ x, y, payload }) => {
+  const date = new Date(payload.value);
+  const dateStr = date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  return (
+    <text x={x} y={y} dy={16} textAnchor="middle" fill="#666" fontSize={12}>
+      <tspan x={x} dy="10">{dateStr}</tspan>
+      <tspan x={x} dy="15">{timeStr}</tspan>
+    </text>
+  );
+};
 
 export default function TemperatureGraph({ readings, unit }: TemperatureGraphProps) {
   if (readings.length === 0) {
@@ -22,25 +50,13 @@ export default function TemperatureGraph({ readings, unit }: TemperatureGraphPro
     );
   }
 
-  // Format data for chart
+  // Format data for chart (keep raw timestamp for axis)
   const chartData = readings
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    .map((r) => {
-      const date = new Date(r.timestamp);
-      const dateStr = date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      });
-      const timeStr = date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      return {
-        timestamp: `${dateStr}\n${timeStr}`,
-        temperature: r.temperature,
-        fullTime: r.timestamp,
-      };
-    });
+    .map((r) => ({
+      fullTime: r.timestamp,       // raw timestamp for axis
+      temperature: r.temperature,
+    }));
 
   // Define reference lines
   const normalMax = unit === 'C' ? 37.5 : 99.5;
@@ -52,10 +68,23 @@ export default function TemperatureGraph({ readings, unit }: TemperatureGraphPro
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="timestamp" tick={{ fontSize: 12 }} angle={0} textAnchor="middle" height={60} />
-          <YAxis domain={[35, 41]} label={{ value: `°${unit}`, angle: -90, position: 'insideLeft' }} />
+          <XAxis
+            dataKey="fullTime"
+            tick={<CustomTick />}
+            height={80}
+          />
+          <YAxis
+            domain={[35, 41]}
+            label={{ value: `°${unit}`, angle: -90, position: 'insideLeft' }}
+          />
           <Tooltip
             formatter={(value) => [`${value}°${unit}`, 'Temperature']}
+            labelFormatter={(label) => {
+              const d = new Date(label);
+              const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+              return `${dateStr} ${timeStr}`;
+            }}
             labelStyle={{ color: '#000' }}
           />
           <Line
