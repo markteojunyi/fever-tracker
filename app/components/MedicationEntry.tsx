@@ -24,7 +24,7 @@ export default function MedicationEntry({
   logsToday,
   onAddLog,
 }: MedicationEntryProps) {
-  const [selectedMedId, setSelectedMedId] = useState(medications[0]?.id || '');
+  const [selectedMedId, setSelectedMedId] = useState(medications[0]?._id || '');
   const [dosage, setDosage] = useState('');
   const [administeredBy, setAdministeredBy] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,7 +100,7 @@ export default function MedicationEntry({
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {medications.map((med) => (
-            <option key={med._id} value={med.id}>
+            <option key={med._id} value={med._id}>
               {med.name} ({med.dosage} {med.dosageUnit})
             </option>
           ))}

@@ -392,14 +392,14 @@ export default function Home() {
         </div>
         */}
 
-        <MedicationEntry
+        {/* <MedicationEntry
           childId={selectedChildId}
           medications={activeMeds}
           logsToday={logsToday}
           onAddLog={handleAddMedicationLog}
-        />
+        /> 
 
-        <MedicationHistory logs={medicationLogs} medications={activeMeds} />
+        <MedicationHistory logs={medicationLogs} medications={activeMeds} /> */}
 
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-bold mb-3 text-black">Settings</h3>
