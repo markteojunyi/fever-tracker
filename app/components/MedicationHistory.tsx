@@ -38,9 +38,9 @@ export default function MedicationHistory({ logs, medications }: MedicationHisto
       <h3 className="text-lg font-bold mb-3">Recent Medication Doses</h3>
       <div className="space-y-2">
         {sortedLogs.map((log) => {
-          const med = medications.find((m) => m.id === log.medicationDefinitionId);
+          const med = medications.find((m) => m._id === log.medicationDefinitionId);
           return (
-            <div key={log.id} className="flex justify-between items-center p-2 bg-gray-200 rounded">
+            <div key={log._id} className="flex justify-between items-center p-2 bg-gray-200 rounded">
               <div>
                 <p className="font-semibold">{med?.name}</p>
                 <p className="text-sm text-gray-800">

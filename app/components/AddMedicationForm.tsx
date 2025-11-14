@@ -21,7 +21,7 @@ export default function AddMedicationForm({
 }: AddMedicationFormProps) {
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
-  const [dosageUnit, setDosageUnit] = useState<'mg' | 'ml'>('mg');
+  const [dosageUnit, setDosageUnit] = useState<'mg' | 'ml'>('ml');
   const [frequency, setFrequency] = useState('6');
   const [maxDosesPerDay, setMaxDosesPerDay] = useState('4');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
