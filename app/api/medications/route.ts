@@ -30,6 +30,8 @@ export async function POST(request: NextRequest) {
     await connectDB();
     const body = await request.json();
 
+    console.log('Received medication data:', body);
+
     const medication = await MedicationDefinition.create({
       childId: body.childId,
       name: body.name,
@@ -43,8 +45,14 @@ export async function POST(request: NextRequest) {
       isActive: true,
     });
 
+    console.log('Created medication:', medication);
+
     return NextResponse.json(medication, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create medication' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error creating medication:', error);
+    return NextResponse.json({ 
+      error: 'Failed to create medication',
+      details: error.message 
+    }, { status: 500 });
   }
 }
