@@ -199,6 +199,26 @@ export default function Home() {
     }
   };
 
+    // Add the new delete function RIGHT HERE, after handleAddMedicationLog
+  const handleDeleteMedicationLog = async (logId: string) => {
+    try {
+      const res = await fetch(`/api/medication-logs?id=${logId}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to delete log');
+      }
+
+      // Update state to remove the deleted log
+      setMedicationLogs(medicationLogs.filter(log => log._id !== logId));
+      alert('✅ Medication log deleted successfully!');
+    } catch (err) {
+      alert('❌ Error deleting medication log');
+      console.error(err);
+    }
+  };
+
   const currentChild = children.find((c) => c._id === selectedChildId);
   const childTemps = temperatures;
   const activeMeds = medications;
@@ -399,7 +419,11 @@ export default function Home() {
           onAddLog={handleAddMedicationLog}
         />
 
-        <MedicationHistory logs={medicationLogs} medications={activeMeds} />
+        <MedicationHistory 
+          logs={medicationLogs} 
+          medications={activeMeds} 
+          onDeleteLog={handleDeleteMedicationLog}
+        />
 
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-bold mb-3 text-black">Settings</h3>
