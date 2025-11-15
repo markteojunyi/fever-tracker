@@ -57,3 +57,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create medication log' }, { status: 500 });
   }
 }
+
+// Add this to the end of app/api/medication-logs/route.ts
+
+export async function DELETE(request: NextRequest) {
+  try {
+    await connectDB();
+    const logId = request.nextUrl.searchParams.get('id');
+
+    if (!logId) {
+      return NextResponse.json({ error: 'Log ID is required' }, { status: 400 });
+    }
+
+    const deletedLog = await MedicationLog.findByIdAndDelete(logId);
+
+    if (!deletedLog) {
+      return NextResponse.json({ error: 'Log not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: 'Log deleted successfully', deletedLog });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete medication log' }, { status: 500 });
+  }
+}
