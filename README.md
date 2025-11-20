@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌡️ Fever Tracker
 
-## Getting Started
+A web application designed to help parents track their children's temperature and medication during illness. Built to simplify the process of monitoring fever patterns and managing medication schedules.
 
-First, run the development server:
+## 📋 About
 
+Fever Tracker is a minimal viable product (MVP) created to solve a common parenting challenge: keeping accurate records of a sick child's temperature readings and medication doses. The app provides an easy-to-use interface for logging temperatures, tracking medication schedules, and visualizing fever trends over time.
+
+## ✨ Key Features
+
+### Temperature Tracking
+- Log temperature readings with timestamps
+- Visual graph showing temperature trends over time
+- Support for both Celsius and Fahrenheit
+- High fever alerts (>39°C)
+- Fever trend indicators (improving/stable/worsening)
+
+### Medication Management
+- Add medications prescribed by doctors with dosage details
+- Track medication frequency and maximum daily doses
+- Log when medication is given to the child
+- Overdose prevention warnings
+- View medication history with ability to delete incorrect entries
+- Track who administered each dose (Mom, Dad, etc.)
+
+### Child Management
+- Support for multiple children
+- Easy switching between children
+- Individual tracking for each child
+
+### User Interface
+- Clean, mobile-friendly design
+- Real-time status updates
+- Color-coded alerts for high fever or worsening trends
+- Simple data visualization
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **Framework:** Next.js 14 (React)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **UI Components:** Custom React components
+
+### Backend
+- **Framework:** Next.js API Routes
+- **Language:** TypeScript
+- **Runtime:** Node.js
+
+### Database
+- **Database:** MongoDB
+- **ODM:** Mongoose
+- **Hosting:** MongoDB Atlas (cloud)
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- MongoDB Atlas account
+
+### Installation
+
+1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <your-repo-url>
+cd fever-tracker
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file in the root directory:
+```
+MONGODB_URI=your_mongodb_connection_string
+```
 
-## Learn More
+4. Run the development server
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📱 Usage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Add a child** - Start by adding your child's information
+2. **Log temperature** - Record temperature readings throughout the day
+3. **Add medications** - Input medications prescribed by the doctor with dosage instructions
+4. **Track doses** - Log each time you give medication to your child
+5. **Monitor trends** - View the temperature graph to track fever patterns
 
-## Deploy on Vercel
+## 🔒 Data Privacy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This application stores data in a private MongoDB database. Each family's data is isolated and secure. The app is designed for personal/family use.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📝 License
+
+This project is for personal use.
+
+## 👨‍💻 Author
+
+Created as a personal project to help manage children's health during illness.
+
+## 🙏 Acknowledgments
+
+Built with guidance from Claude (Anthropic) for learning purposes.
+
