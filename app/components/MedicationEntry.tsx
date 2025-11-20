@@ -134,12 +134,12 @@ export default function MedicationEntry({
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-semibold mb-1">Given by:</label>
+        <label className="block text-sm font-semibold mb-1">Notes:</label>
         <input
           type="text"
           value={administeredBy}
           onChange={(e) => setAdministeredBy(e.target.value)}
-          placeholder="e.g., Mom, Dad, Nanny"
+          placeholder="e.g., Given by Mom/Dad/NaiNai or any other notes"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
