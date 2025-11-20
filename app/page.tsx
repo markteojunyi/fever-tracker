@@ -333,7 +333,7 @@ export default function Home() {
   console.log('activeMeds.length:', activeMeds.length);
   console.log('medicationLogs:', medicationLogs);
 
-  return (
+    return (
     <main className="bg-gray-100 min-h-screen pb-8">
       <header className="bg-blue-600 text-white p-4 sticky top-0 shadow">
         <h1 className="text-2xl font-bold">🌡️ Fever Tracker</h1>
@@ -405,14 +405,7 @@ export default function Home() {
           </div>
         )}
 
-        {activeMeds.length > 0 && (
-          <button
-            onClick={() => setShowAddMedicationForm(true)}
-            className="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 mb-4"
-          >
-            + Add Another Medication
-          </button>
-        )}
+
 
         {/* There is this missing section that claude can't seem to figure out. I need a button here!
         <div className="flex gap-2 mb-4">
@@ -431,34 +424,14 @@ export default function Home() {
           onDeleteLog={handleDeleteMedicationLog}
         />
 
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-bold mb-3 text-black">Settings</h3>
-          <div className="mb-4">
-            <label className="block text-sm font-semibold mb-2 text-black">Temperature Unit:</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTemperaturePreference('C')}
-                className={`px-4 py-2 rounded font-semibold ${
-                  temperaturePreference === 'C'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                °C
-              </button>
-              <button
-                onClick={() => setTemperaturePreference('F')}
-                className={`px-4 py-2 rounded font-semibold ${
-                  temperaturePreference === 'F'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                °F
-              </button>
-            </div>
-          </div>
-        </div>
+        {activeMeds.length > 0 && (
+          <button
+            onClick={() => setShowAddMedicationForm(true)}
+            className="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 mb-4"
+          >
+            + Add Another Medication
+          </button>
+        )}
       </div>
 
         {showAddMedicationForm && (
