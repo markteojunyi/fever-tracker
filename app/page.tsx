@@ -174,6 +174,11 @@ export default function Home() {
 
   // Handle adding medication log
   const handleAddMedicationLog = async (log: Omit<MedicationLog, '_id'>) => {
+    console.log('=== BEFORE LOGGING ===');
+    console.log('selectedChildId:', selectedChildId);
+    console.log('activeMeds:', activeMeds);
+    
+    
     try {
       const res = await fetch('/api/medication-logs', {
         method: 'POST',
@@ -230,6 +235,8 @@ export default function Home() {
     logDate.setHours(0, 0, 0, 0);
     return logDate.getTime() === today.getTime();
   });
+
+
 
   const trend = calculateTrend(childTemps);
 
@@ -319,6 +326,12 @@ export default function Home() {
   if (!currentChild) {
     return <div className="p-4 text-center">No child selected</div>;
   }
+
+  console.log('=== RENDERING PAGE ===');
+  console.log('selectedChildId:', selectedChildId);
+  console.log('activeMeds:', activeMeds);
+  console.log('activeMeds.length:', activeMeds.length);
+  console.log('medicationLogs:', medicationLogs);
 
   return (
     <main className="bg-gray-100 min-h-screen pb-8">
@@ -411,13 +424,6 @@ export default function Home() {
           </button>
         </div>
         */}
-
-        <MedicationEntry
-          childId={selectedChildId}
-          medications={activeMeds}
-          logsToday={logsToday}
-          onAddLog={handleAddMedicationLog}
-        />
 
         <MedicationHistory 
           logs={medicationLogs} 
