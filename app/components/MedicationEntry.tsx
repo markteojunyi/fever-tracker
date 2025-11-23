@@ -26,12 +26,20 @@ export default function MedicationEntry({
 }: MedicationEntryProps) {
   const [selectedMedId, setSelectedMedId] = useState('');
 
-  // Add this useEffect to set the first medication when medications load
-  useEffect(() => {
-    if (medications.length > 0 && !selectedMedId && medications[0]._id) {
+useEffect(() => {
+  // When medications go from empty to having items, select the first one
+  if (medications.length > 0 && !selectedMedId && medications[0]._id) {
+    setSelectedMedId(medications[0]._id);
+  }
+  
+  // When medications change and current selection doesn't exist, select first
+  if (medications.length > 0 && selectedMedId) {
+    const currentMedStillExists = medications.find(m => m._id === selectedMedId);
+    if (!currentMedStillExists && medications[0]._id) {
       setSelectedMedId(medications[0]._id);
     }
-  }, [medications, selectedMedId]);
+  }
+}, [medications, selectedMedId]); // ← Add selectedMedId back!
 
   const [dosage, setDosage] = useState('');
   const [administeredBy, setAdministeredBy] = useState('');
