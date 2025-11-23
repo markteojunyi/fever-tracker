@@ -327,11 +327,11 @@ export default function Home() {
     return <div className="p-4 text-center">No child selected</div>;
   }
 
-  console.log('=== RENDERING PAGE ===');
-  console.log('selectedChildId:', selectedChildId);
-  console.log('activeMeds:', activeMeds);
-  console.log('activeMeds.length:', activeMeds.length);
-  console.log('medicationLogs:', medicationLogs);
+      console.log('=== RENDER CHECK ===');
+      console.log('selectedChildId:', selectedChildId);
+      console.log('activeMeds:', activeMeds);
+      console.log('activeMeds.length:', activeMeds.length);
+      console.log('Should MedicationEntry show?', activeMeds.length > 0);
 
     return (
     <main className="bg-gray-100 min-h-screen pb-8">

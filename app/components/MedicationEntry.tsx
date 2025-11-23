@@ -6,10 +6,10 @@
 'use client';
 
 import React from 'react';
-import { useState } from 'react';
 import { MedicationDefinition, MedicationLog } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 import { checkOverdoseRisk } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 interface MedicationEntryProps {
   childId: string;
@@ -24,7 +24,15 @@ export default function MedicationEntry({
   logsToday,
   onAddLog,
 }: MedicationEntryProps) {
-  const [selectedMedId, setSelectedMedId] = useState(medications[0]?._id || '');
+  const [selectedMedId, setSelectedMedId] = useState('');
+
+  // Add this useEffect to set the first medication when medications load
+  useEffect(() => {
+    if (medications.length > 0 && !selectedMedId && medications[0]._id) {
+      setSelectedMedId(medications[0]._id);
+    }
+  }, [medications, selectedMedId]);
+
   const [dosage, setDosage] = useState('');
   const [administeredBy, setAdministeredBy] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
