@@ -36,7 +36,7 @@ const MedicationDefinitionSchema = new Schema<IMedicationDefinition>(
     },
     dosageUnit: {
       type: String,
-      enum: ['mg', 'ml'],
+      enum: ['pills/tablets', 'ml'],
       required: true,
     },
     frequency: {
