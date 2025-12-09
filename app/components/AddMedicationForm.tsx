@@ -21,7 +21,7 @@ export default function AddMedicationForm({
 }: AddMedicationFormProps) {
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
-  const [dosageUnit, setDosageUnit] = useState<'pills/tablets' | 'ml'>('ml');
+  const [dosageUnit, setDosageUnit] = useState<'pills' | 'ml'>('ml');
   const [frequency, setFrequency] = useState('6');
   const [maxDosesPerDay, setMaxDosesPerDay] = useState('4');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
@@ -108,10 +108,10 @@ export default function AddMedicationForm({
               <label className="block text-sm font-semibold mb-2 text-black">Unit:</label>
               <select
                 value={dosageUnit}
-                onChange={(e) => setDosageUnit(e.target.value as 'pills/tablets' | 'ml')}
+                onChange={(e) => setDosageUnit(e.target.value as 'pills' | 'ml')}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="pills/tablets"></option>
+                <option value="pills"></option>
                 <option value="ml">ml</option>
               </select>
             </div>

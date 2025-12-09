@@ -9,7 +9,7 @@ export interface IMedicationLog extends Document {
   childId: mongoose.Types.ObjectId;
   administeredAt: Date;
   dosageAdministered: number;
-  dosageUnit: 'mg' | 'ml';
+  dosageUnit: 'pills' | 'ml';
   administeredBy: string;
   createdAt: Date;
 }
@@ -36,7 +36,7 @@ const MedicationLogSchema = new Schema<IMedicationLog>(
     },
     dosageUnit: {
       type: String,
-      enum: ['mg', 'ml'],
+      enum: ['pills', 'ml'],
       required: true,
     },
     administeredBy: {
