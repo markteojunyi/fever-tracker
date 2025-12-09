@@ -24,7 +24,7 @@ export interface MedicationDefinition {
   childId: string;
   name: string;
   dosage: number;
-  dosageUnit: 'mg' | 'ml';
+  dosageUnit: 'pills/tablets' | 'ml';
   frequency: number;
   maxDosesPerDay: number;
   startDate: string;
