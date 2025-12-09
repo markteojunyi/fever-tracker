@@ -111,7 +111,7 @@ export default function AddMedicationForm({
                 onChange={(e) => setDosageUnit(e.target.value as 'pills' | 'ml')}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="pills"></option>
+                <option value="pills">pills</option>
                 <option value="ml">ml</option>
               </select>
             </div>
