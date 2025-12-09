@@ -8,7 +8,7 @@ export interface IMedicationDefinition extends Document {
   childId: mongoose.Types.ObjectId;
   name: string;
   dosage: number;
-  dosageUnit: 'mg' | 'ml';
+  dosageUnit: 'pills/tablets' | 'ml';
   frequency: number;
   maxDosesPerDay: number;
   maxTotalDailyDosage?: number;
