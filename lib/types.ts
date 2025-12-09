@@ -40,7 +40,7 @@ export interface MedicationLog {
   childId: string;
   administeredAt: string;
   dosageAdministered: number;
-  dosageUnit: 'mg' | 'ml';
+  dosageUnit: 'pills/tablets' | 'ml';
   administeredBy: string;
   createdAt: string;
 }
