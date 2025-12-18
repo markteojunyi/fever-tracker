@@ -1,80 +1,50 @@
 name: DAST (OWASP ZAP)
 
 on:
-    push:
-        branches: [ "main" ]
-    pull_request:
-        branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   zap_scan:
     name: ZAP Baseline Scan
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: read
-      issues: write
-      security-events: write
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
+      # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      - name: Build Next.js app
-        run: npm run build
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-
+      # Step 4: Start Next.js app in the background
       - name: Start Next.js app
-        run: npm run start &
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          PORT: 3000
-          NODE_ENV: production
+        run: npm run dev &
 
+      # Step 5: Wait until the app is reachable
       - name: Wait for app to be ready
         run: |
           echo "Waiting for http://localhost:3000 to be ready..."
-          for i in {1..60}; do
-            if curl -sf http://localhost:3000 > /dev/null; then
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 > /dev/null; then
               echo "App is up!"
               exit 0
             fi
-            echo "Attempt $i/60..."
-            sleep 3
+            sleep 2
           done
           echo "App did not start in time"
           exit 1
 
-      - name: Run ZAP Baseline Scan
-        id: zap-scan
-        continue-on-error: true
+      # Step 6: Run OWASP ZAP Baseline Scan
+      - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
         with:
           target: 'http://localhost:3000'
           fail_action: true
-
-      - name: Upload ZAP Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-report
-          path: |
-            report_html.html
-            report_md.md
-            report_json.json
-          if-no-files-found: warn
-
-      - name: Fail if ZAP found issues
-        if: steps.zap-scan.outcome == 'failure'
-        run: |
-          echo "❌ ZAP scan found security issues. Check the uploaded report artifacts."
-          exit 1
