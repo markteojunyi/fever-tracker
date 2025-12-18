@@ -10,6 +10,11 @@ jobs:
   zap_scan:
     name: ZAP Baseline Scan
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      issues: write
+      security-events: write
 
     steps:
       - name: Checkout repository
@@ -50,6 +55,8 @@ jobs:
           exit 1
 
       - name: Run ZAP Baseline Scan
+        id: zap-scan
+        continue-on-error: true
         uses: zaproxy/action-baseline@v0.10.0
         with:
           target: 'http://localhost:3000'
@@ -64,4 +71,10 @@ jobs:
             report_html.html
             report_md.md
             report_json.json
-            if-no-files-found: warn
+          if-no-files-found: warn
+
+      - name: Fail if ZAP found issues
+        if: steps.zap-scan.outcome == 'failure'
+        run: |
+          echo "❌ ZAP scan found security issues. Check the uploaded report artifacts."
+          exit 1
