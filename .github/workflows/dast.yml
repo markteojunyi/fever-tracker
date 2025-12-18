@@ -23,23 +23,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Start MongoDB (for testing)
-        uses: supercharge/mongodb-github-action@1.10.0
-        with:
-          mongodb-version: '6.0'
-
-      - name: Set environment variables
-        run: |
-          echo "MONGODB_URI=mongodb://localhost:27017/test" >> $GITHUB_ENV
-          echo "NODE_ENV=development" >> $GITHUB_ENV
-
       - name: Build Next.js app
         run: npm run build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
 
       - name: Start Next.js app
         run: npm run start &
         env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           PORT: 3000
+          NODE_ENV: production
 
       - name: Wait for app to be ready
         run: |
