@@ -276,7 +276,7 @@ export default function Home() {
             <form onSubmit={handleAddChild} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold mb-2 text-black">
-                  Child's Name:
+                  "Child's Name:"
                 </label>
                 <input
                   type="text"
@@ -364,10 +364,11 @@ export default function Home() {
         )}
 
         <ChildSelector
-          children={children}
           selectedChildId={selectedChildId}
           onSelectChild={setSelectedChildId}
-        />
+        >
+          {children}
+        </ChildSelector>
 
         <div className="flex gap-2 mb-4">
           <button
