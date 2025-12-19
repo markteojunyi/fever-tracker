@@ -3,13 +3,13 @@
 // Form to log medication dose
 // ============================================
 
-'use client';
+"use client";
 
-import React from 'react';
-import { MedicationDefinition, MedicationLog } from '@/lib/types';
-import { v4 as uuidv4 } from 'uuid';
-import { checkOverdoseRisk } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import React from "react";
+import { MedicationDefinition, MedicationLog } from "@/lib/types";
+import { v4 as uuidv4 } from "uuid";
+import { checkOverdoseRisk } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 interface MedicationEntryProps {
   childId: string;
@@ -24,25 +24,27 @@ export default function MedicationEntry({
   logsToday,
   onAddLog,
 }: MedicationEntryProps) {
-  const [selectedMedId, setSelectedMedId] = useState('');
+  const [selectedMedId, setSelectedMedId] = useState("");
 
-useEffect(() => {
-  // When medications go from empty to having items, select the first one
-  if (medications.length > 0 && !selectedMedId && medications[0]._id) {
-    setSelectedMedId(medications[0]._id);
-  }
-  
-  // When medications change and current selection doesn't exist, select first
-  if (medications.length > 0 && selectedMedId) {
-    const currentMedStillExists = medications.find(m => m._id === selectedMedId);
-    if (!currentMedStillExists && medications[0]._id) {
+  useEffect(() => {
+    // When medications go from empty to having items, select the first one
+    if (medications.length > 0 && !selectedMedId && medications[0]._id) {
       setSelectedMedId(medications[0]._id);
     }
-  }
-}, [medications, selectedMedId]); // ← Add selectedMedId back!
 
-  const [dosage, setDosage] = useState('');
-  const [administeredBy, setAdministeredBy] = useState('');
+    // When medications change and current selection doesn't exist, select first
+    if (medications.length > 0 && selectedMedId) {
+      const currentMedStillExists = medications.find(
+        (m) => m._id === selectedMedId
+      );
+      if (!currentMedStillExists && medications[0]._id) {
+        setSelectedMedId(medications[0]._id);
+      }
+    }
+  }, [medications, selectedMedId]); // ← Add selectedMedId back!
+
+  const [dosage, setDosage] = useState("");
+  const [administeredBy, setAdministeredBy] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /* if (medications.length === 0) {
@@ -60,23 +62,30 @@ useEffect(() => {
   const selectedMed = medications.find((m) => m._id === selectedMedId);
   if (!selectedMed) return null;
 
-  const logsForMedToday = logsToday.filter((l) => l.medicationDefinitionId === selectedMedId);
-  const overdoseRisk = checkOverdoseRisk(logsForMedToday.length, selectedMed.maxDosesPerDay);
+  const logsForMedToday = logsToday.filter(
+    (l) => l.medicationDefinitionId === selectedMedId
+  );
+  const overdoseRisk = checkOverdoseRisk(
+    logsForMedToday.length,
+    selectedMed.maxDosesPerDay
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!dosage || !administeredBy) {
-      alert('Please fill all fields');
+      alert("Please fill all fields");
       return;
     }
 
-    if (overdoseRisk === 'dangerous') {
-      alert(`⚠️ WARNING: Maximum doses (${selectedMed.maxDosesPerDay}) already given today!`);
+    if (overdoseRisk === "dangerous") {
+      alert(
+        `⚠️ WARNING: Maximum doses (${selectedMed.maxDosesPerDay}) already given today!`
+      );
       return;
     }
 
-    if (overdoseRisk === 'warning') {
+    if (overdoseRisk === "warning") {
       const confirmed = window.confirm(
         `⚠️ Warning: You're close to max doses (${logsForMedToday.length}/${selectedMed.maxDosesPerDay}). Continue?`
       );
@@ -99,13 +108,16 @@ useEffect(() => {
     onAddLog(newLog);
 
     // Reset form
-    setDosage('');
-    setAdministeredBy('');
+    setDosage("");
+    setAdministeredBy("");
     setIsSubmitting(false);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded-lg shadow mb-4">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white p-4 rounded-lg shadow mb-4"
+    >
       <h3 className="text-lg font-bold mb-3">Log Medication</h3>
 
       <div className="mb-4">
@@ -131,14 +143,21 @@ useEffect(() => {
           <strong>Max per day:</strong> {selectedMed.maxDosesPerDay} doses
         </p>
         <p>
-          <strong>Given today:</strong> {logsForMedToday.length}/{selectedMed.maxDosesPerDay}{' '}
-          {overdoseRisk === 'dangerous' && <span className="text-red-600 font-bold">❌ MAX REACHED</span>}
-          {overdoseRisk === 'warning' && <span className="text-orange-600 font-bold">⚠️ WARNING</span>}
+          <strong>Given today:</strong> {logsForMedToday.length}/
+          {selectedMed.maxDosesPerDay}{" "}
+          {overdoseRisk === "dangerous" && (
+            <span className="text-red-600 font-bold">❌ MAX REACHED</span>
+          )}
+          {overdoseRisk === "warning" && (
+            <span className="text-orange-600 font-bold">⚠️ WARNING</span>
+          )}
         </p>
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-semibold mb-1">Dosage ({selectedMed.dosageUnit}):</label>
+        <label className="block text-sm font-semibold mb-1">
+          Dosage ({selectedMed.dosageUnit}):
+        </label>
         <input
           type="number"
           step="0.1"
@@ -162,10 +181,10 @@ useEffect(() => {
 
       <button
         type="submit"
-        disabled={isSubmitting || overdoseRisk === 'dangerous'}
+        disabled={isSubmitting || overdoseRisk === "dangerous"}
         className="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 disabled:bg-gray-400"
       >
-        {isSubmitting ? 'Logging...' : 'Log Medication'}
+        {isSubmitting ? "Logging..." : "Log Medication"}
       </button>
     </form>
   );

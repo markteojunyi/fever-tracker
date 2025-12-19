@@ -3,42 +3,44 @@
 // Main dashboard with Add Child form
 // ============================================
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import ChildSelector from './components/ChildSelector';
-import StatusCard from './components/StatusCard';
-import TemperatureEntry from './components/TemperatureEntry';
-import TemperatureGraph from './components/TemperatureGraph';
-import MedicationEntry from './components/MedicationEntry';
-import MedicationHistory from './components/MedicationHistory';
-import AddMedicationForm from './components/AddMedicationForm';
+import { useState, useEffect } from "react";
+import ChildSelector from "./components/ChildSelector";
+import StatusCard from "./components/StatusCard";
+import TemperatureEntry from "./components/TemperatureEntry";
+import TemperatureGraph from "./components/TemperatureGraph";
+import MedicationEntry from "./components/MedicationEntry";
+import MedicationHistory from "./components/MedicationHistory";
+import AddMedicationForm from "./components/AddMedicationForm";
 import {
   Child,
   TemperatureReading,
   MedicationDefinition,
   MedicationLog,
   TemperatureTrend,
-} from '@/lib/types';
-import { calculateTrend } from '@/lib/utils';
+} from "@/lib/types";
+import { calculateTrend } from "@/lib/utils";
 
 export default function Home() {
   const [children, setChildren] = useState<Child[]>([]);
-  const [selectedChildId, setSelectedChildId] = useState('');
+  const [selectedChildId, setSelectedChildId] = useState("");
 
   const [temperatures, setTemperatures] = useState<TemperatureReading[]>([]);
   const [medications, setMedications] = useState<MedicationDefinition[]>([]);
   const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
 
-  const [temperaturePreference, setTemperaturePreference] = useState<'C' | 'F'>('C');
+  const [temperaturePreference, setTemperaturePreference] = useState<"C" | "F">(
+    "C"
+  );
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Add Child Form State
   const [showAddChildForm, setShowAddChildForm] = useState(false);
-  const [newChildName, setNewChildName] = useState('');
-  const [newChildDOB, setNewChildDOB] = useState('');
-  const [newChildWeight, setNewChildWeight] = useState('');
+  const [newChildName, setNewChildName] = useState("");
+  const [newChildDOB, setNewChildDOB] = useState("");
+  const [newChildWeight, setNewChildWeight] = useState("");
   const [addingChild, setAddingChild] = useState(false);
   const [showAddMedicationForm, setShowAddMedicationForm] = useState(false);
 
@@ -50,10 +52,10 @@ export default function Home() {
   const fetchChildren = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
-      const childRes = await fetch('/api/children');
-      if (!childRes.ok) throw new Error('Failed to fetch children');
+      const childRes = await fetch("/api/children");
+      if (!childRes.ok) throw new Error("Failed to fetch children");
       const childData = await childRes.json();
       setChildren(childData);
 
@@ -65,7 +67,7 @@ export default function Home() {
         setShowAddChildForm(true);
       }
     } catch (err) {
-      setError('Error loading data. Make sure MongoDB is connected.');
+      setError("Error loading data. Make sure MongoDB is connected.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -75,7 +77,7 @@ export default function Home() {
   const fetchChildData = async (childId: string) => {
     try {
       if (!childId) return;
-      
+
       const tempRes = await fetch(`/api/temperatures?childId=${childId}`);
       if (tempRes.ok) {
         const tempData = await tempRes.json();
@@ -84,7 +86,9 @@ export default function Home() {
 
       if (!selectedChildId) return;
 
-      const medRes = await fetch(`/api/medications?childId=${childId}&isActive=true`);
+      const medRes = await fetch(
+        `/api/medications?childId=${childId}&isActive=true`
+      );
       if (medRes.ok) {
         const medData = await medRes.json();
         setMedications(medData);
@@ -96,7 +100,7 @@ export default function Home() {
         setMedicationLogs(logsData);
       }
     } catch (err) {
-      console.error('Error fetching child data:', err);
+      console.error("Error fetching child data:", err);
     }
   };
 
@@ -111,16 +115,16 @@ export default function Home() {
     e.preventDefault();
 
     if (!newChildName || !newChildDOB) {
-      alert('Please fill in name and date of birth');
+      alert("Please fill in name and date of birth");
       return;
     }
 
     setAddingChild(true);
 
     try {
-      const res = await fetch('/api/children', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/children", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newChildName,
           dateOfBirth: newChildDOB,
@@ -128,18 +132,18 @@ export default function Home() {
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to add child');
+      if (!res.ok) throw new Error("Failed to add child");
 
       const newChild = await res.json();
       setChildren([...children, newChild]);
       setSelectedChildId(newChild._id);
       setShowAddChildForm(false);
-      setNewChildName('');
-      setNewChildDOB('');
-      setNewChildWeight('');
-      alert('✅ Child added successfully!');
+      setNewChildName("");
+      setNewChildDOB("");
+      setNewChildWeight("");
+      alert("✅ Child added successfully!");
     } catch (err) {
-      alert('❌ Error adding child');
+      alert("❌ Error adding child");
       console.error(err);
     } finally {
       setAddingChild(false);
@@ -147,11 +151,13 @@ export default function Home() {
   };
 
   // Handle adding temperature
-  const handleAddTemperature = async (reading: Omit<TemperatureReading, '_id'>) => {
+  const handleAddTemperature = async (
+    reading: Omit<TemperatureReading, "_id">
+  ) => {
     try {
-      const res = await fetch('/api/temperatures', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/temperatures", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           childId: selectedChildId,
           temperature: reading.temperature,
@@ -161,28 +167,27 @@ export default function Home() {
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to save temperature');
+      if (!res.ok) throw new Error("Failed to save temperature");
 
       const newReading = await res.json();
       setTemperatures([...temperatures, newReading]);
-      alert('✅ Temperature logged successfully!');
+      alert("✅ Temperature logged successfully!");
     } catch (err) {
-      alert('❌ Error saving temperature');
+      alert("❌ Error saving temperature");
       console.error(err);
     }
   };
 
   // Handle adding medication log
-  const handleAddMedicationLog = async (log: Omit<MedicationLog, '_id'>) => {
-    console.log('=== BEFORE LOGGING ===');
-    console.log('selectedChildId:', selectedChildId);
-    console.log('activeMeds:', activeMeds);
-    
-    
+  const handleAddMedicationLog = async (log: Omit<MedicationLog, "_id">) => {
+    console.log("=== BEFORE LOGGING ===");
+    console.log("selectedChildId:", selectedChildId);
+    console.log("activeMeds:", activeMeds);
+
     try {
-      const res = await fetch('/api/medication-logs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/medication-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           medicationDefinitionId: log.medicationDefinitionId,
           childId: selectedChildId,
@@ -193,33 +198,33 @@ export default function Home() {
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to save medication log');
+      if (!res.ok) throw new Error("Failed to save medication log");
 
       const newLog = await res.json();
       setMedicationLogs([...medicationLogs, newLog]);
-      alert('✅ Medication logged successfully!');
+      alert("✅ Medication logged successfully!");
     } catch (err) {
-      alert('❌ Error saving medication');
+      alert("❌ Error saving medication");
       console.error(err);
     }
   };
 
-    // Add the new delete function RIGHT HERE, after handleAddMedicationLog
+  // Add the new delete function RIGHT HERE, after handleAddMedicationLog
   const handleDeleteMedicationLog = async (logId: string) => {
     try {
       const res = await fetch(`/api/medication-logs?id=${logId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!res.ok) {
-        throw new Error('Failed to delete log');
+        throw new Error("Failed to delete log");
       }
 
       // Update state to remove the deleted log
-      setMedicationLogs(medicationLogs.filter(log => log._id !== logId));
-      alert('✅ Medication log deleted successfully!');
+      setMedicationLogs(medicationLogs.filter((log) => log._id !== logId));
+      alert("✅ Medication log deleted successfully!");
     } catch (err) {
-      alert('❌ Error deleting medication log');
+      alert("❌ Error deleting medication log");
       console.error(err);
     }
   };
@@ -235,8 +240,6 @@ export default function Home() {
     logDate.setHours(0, 0, 0, 0);
     return logDate.getTime() === today.getTime();
   });
-
-
 
   const trend = calculateTrend(childTemps);
 
@@ -259,16 +262,22 @@ export default function Home() {
       <main className="bg-gray-100 min-h-screen pb-8">
         <header className="bg-blue-600 text-white p-4 sticky top-0 shadow">
           <h1 className="text-2xl font-bold">🌡️ Fever Tracker</h1>
-          <p className="text-sm opacity-90">Track temperature & medication for your child</p>
+          <p className="text-sm opacity-90">
+            Track temperature & medication for your child
+          </p>
         </header>
 
         <div className="max-w-2xl mx-auto p-4">
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-bold mb-4 text-black">Add Your Child</h2>
+            <h2 className="text-2xl font-bold mb-4 text-black">
+              Add Your Child
+            </h2>
 
             <form onSubmit={handleAddChild} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold mb-2 text-black">Child's Name:</label>
+                <label className="block text-sm font-semibold mb-2 text-black">
+                  Child's Name:
+                </label>
                 <input
                   type="text"
                   value={newChildName}
@@ -280,7 +289,9 @@ export default function Home() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-black">Date of Birth:</label>
+                <label className="block text-sm font-semibold mb-2 text-black">
+                  Date of Birth:
+                </label>
                 <input
                   type="date"
                   value={newChildDOB}
@@ -291,7 +302,9 @@ export default function Home() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-black">Weight (kg) - Optional:</label>
+                <label className="block text-sm font-semibold mb-2 text-black">
+                  Weight (kg) - Optional:
+                </label>
                 <input
                   type="number"
                   step="0.1"
@@ -307,7 +320,7 @@ export default function Home() {
                 disabled={addingChild}
                 className="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
               >
-                {addingChild ? 'Adding...' : 'Add Child'}
+                {addingChild ? "Adding..." : "Add Child"}
               </button>
             </form>
 
@@ -327,17 +340,19 @@ export default function Home() {
     return <div className="p-4 text-center">No child selected</div>;
   }
 
-      console.log('=== RENDER CHECK ===');
-      console.log('selectedChildId:', selectedChildId);
-      console.log('activeMeds:', activeMeds);
-      console.log('activeMeds.length:', activeMeds.length);
-      console.log('Should MedicationEntry show?', activeMeds.length > 0);
+  console.log("=== RENDER CHECK ===");
+  console.log("selectedChildId:", selectedChildId);
+  console.log("activeMeds:", activeMeds);
+  console.log("activeMeds.length:", activeMeds.length);
+  console.log("Should MedicationEntry show?", activeMeds.length > 0);
 
-    return (
+  return (
     <main className="bg-gray-100 min-h-screen pb-8">
       <header className="bg-blue-600 text-white p-4 sticky top-0 shadow">
         <h1 className="text-2xl font-bold">🌡️ Fever Tracker</h1>
-        <p className="text-sm opacity-90">Track temperature & medication for your child</p>
+        <p className="text-sm opacity-90">
+          Track temperature & medication for your child
+        </p>
       </header>
 
       <div className="max-w-2xl mx-auto p-4">
@@ -369,19 +384,25 @@ export default function Home() {
           <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-4">
             <p className="text-red-700 font-bold">🚨 HIGH FEVER ALERT</p>
             <p className="text-sm text-red-600">
-              Temperature is {trend.currentTemp.toFixed(1)}°{temperaturePreference}. Consider contacting a doctor.
+              Temperature is {trend.currentTemp.toFixed(1)}°
+              {temperaturePreference}. Consider contacting a doctor.
             </p>
           </div>
         )}
 
-        {trend.trend === 'worsening' && (
+        {trend.trend === "worsening" && (
           <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 mb-4">
             <p className="text-orange-700 font-bold">⚠️ FEVER WORSENING</p>
-            <p className="text-sm text-orange-600">Temperature is trending upward. Monitor closely.</p>
+            <p className="text-sm text-orange-600">
+              Temperature is trending upward. Monitor closely.
+            </p>
           </div>
         )}
 
-        <TemperatureEntry childId={selectedChildId} onAddTemperature={handleAddTemperature} />
+        <TemperatureEntry
+          childId={selectedChildId}
+          onAddTemperature={handleAddTemperature}
+        />
 
         <TemperatureGraph readings={childTemps} unit={temperaturePreference} />
 
@@ -394,8 +415,12 @@ export default function Home() {
 
         {activeMeds.length === 0 && (
           <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
-            <p className="text-blue-700 font-bold mb-2">ℹ️ No Active Medications</p>
-            <p className="text-sm text-blue-600 mb-3">Add a medication to track dosages and set reminders.</p>
+            <p className="text-blue-700 font-bold mb-2">
+              ℹ️ No Active Medications
+            </p>
+            <p className="text-sm text-blue-600 mb-3">
+              Add a medication to track dosages and set reminders.
+            </p>
             <button
               onClick={() => setShowAddMedicationForm(true)}
               className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600"
@@ -404,8 +429,6 @@ export default function Home() {
             </button>
           </div>
         )}
-
-
 
         {/* There is this missing section that claude can't seem to figure out. I need a button here!
         <div className="flex gap-2 mb-4">
@@ -418,9 +441,9 @@ export default function Home() {
         </div>
         */}
 
-        <MedicationHistory 
-          logs={medicationLogs} 
-          medications={activeMeds} 
+        <MedicationHistory
+          logs={medicationLogs}
+          medications={activeMeds}
           onDeleteLog={handleDeleteMedicationLog}
         />
 
@@ -434,25 +457,29 @@ export default function Home() {
         )}
       </div>
 
-        {showAddMedicationForm && (
+      {showAddMedicationForm && (
         <AddMedicationForm
           childId={selectedChildId}
           onMedicationAdded={(newMed) => {
             if (!selectedChildId) return;
-            
+
             setShowAddMedicationForm(false);
-            
+
             // Refresh medications from database
-            const medRes = fetch(`/api/medications?childId=${selectedChildId}&isActive=true`);
-            medRes.then(res => {
-              if (res.ok) {
-                return res.json();
-              }
-            }).then(medData => {
-              if (medData) {
-                setMedications(medData);
-              }
-            });
+            const medRes = fetch(
+              `/api/medications?childId=${selectedChildId}&isActive=true`
+            );
+            medRes
+              .then((res) => {
+                if (res.ok) {
+                  return res.json();
+                }
+              })
+              .then((medData) => {
+                if (medData) {
+                  setMedications(medData);
+                }
+              });
           }}
           onClose={() => setShowAddMedicationForm(false)}
         />

@@ -3,9 +3,9 @@
 // Simple dropdown to select which child to track
 // ============================================
 
-'use client';
+"use client";
 
-import { Child } from '@/lib/types';
+import { Child } from "@/lib/types";
 
 interface ChildSelectorProps {
   children: Child[];

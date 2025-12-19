@@ -3,25 +3,30 @@
 // GET medications, POST new medication
 // ============================================
 
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import MedicationDefinition from '@/lib/models/MedicationDefinition';
+import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import MedicationDefinition from "@/lib/models/MedicationDefinition";
 
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    const childId = request.nextUrl.searchParams.get('childId');
-    const isActive = request.nextUrl.searchParams.get('isActive');
+    const childId = request.nextUrl.searchParams.get("childId");
+    const isActive = request.nextUrl.searchParams.get("isActive");
 
     const query: any = {};
     if (childId) query.childId = childId;
-    if (isActive === 'true') query.isActive = true;
-    if (isActive === 'false') query.isActive = false;
+    if (isActive === "true") query.isActive = true;
+    if (isActive === "false") query.isActive = false;
 
-    const medications = await MedicationDefinition.find(query).sort({ createdAt: -1 });
+    const medications = await MedicationDefinition.find(query).sort({
+      createdAt: -1,
+    });
     return NextResponse.json(medications);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch medications' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch medications" },
+      { status: 500 }
+    );
   }
 }
 
@@ -30,7 +35,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
     const body = await request.json();
 
-    console.log('Received medication data:', body);
+    console.log("Received medication data:", body);
 
     const medication = await MedicationDefinition.create({
       childId: body.childId,
@@ -45,14 +50,17 @@ export async function POST(request: NextRequest) {
       isActive: true,
     });
 
-    console.log('Created medication:', medication);
+    console.log("Created medication:", medication);
 
     return NextResponse.json(medication, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating medication:', error);
-    return NextResponse.json({ 
-      error: 'Failed to create medication',
-      details: error.message 
-    }, { status: 500 });
+    console.error("Error creating medication:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to create medication",
+        details: error.message,
+      },
+      { status: 500 }
+    );
   }
 }

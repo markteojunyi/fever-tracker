@@ -2,13 +2,13 @@
 // FILE: lib/models/MedicationDefinition.ts
 // ============================================
 
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMedicationDefinition extends Document {
   childId: mongoose.Types.ObjectId;
   name: string;
   dosage: number;
-  dosageUnit: 'pills' | 'ml';
+  dosageUnit: "pills" | "ml";
   frequency: number;
   maxDosesPerDay: number;
   maxTotalDailyDosage?: number;
@@ -22,30 +22,30 @@ const MedicationDefinitionSchema = new Schema<IMedicationDefinition>(
   {
     childId: {
       type: Schema.Types.ObjectId,
-      ref: 'Child',
-      required: [true, 'Please provide childId'],
+      ref: "Child",
+      required: [true, "Please provide childId"],
     },
     name: {
       type: String,
-      required: [true, 'Please provide medication name'],
+      required: [true, "Please provide medication name"],
       trim: true,
     },
     dosage: {
       type: Number,
-      required: [true, 'Please provide dosage'],
+      required: [true, "Please provide dosage"],
     },
     dosageUnit: {
       type: String,
-      enum: ['pills', 'ml'],
+      enum: ["pills", "ml"],
       required: true,
     },
     frequency: {
       type: Number,
-      required: [true, 'Please provide frequency in hours'],
+      required: [true, "Please provide frequency in hours"],
     },
     maxDosesPerDay: {
       type: Number,
-      required: [true, 'Please provide max doses per day'],
+      required: [true, "Please provide max doses per day"],
     },
     maxTotalDailyDosage: {
       type: Number,
@@ -53,7 +53,7 @@ const MedicationDefinitionSchema = new Schema<IMedicationDefinition>(
     },
     startDate: {
       type: Date,
-      required: [true, 'Please provide start date'],
+      required: [true, "Please provide start date"],
     },
     endDate: {
       type: Date,
@@ -76,4 +76,7 @@ MedicationDefinitionSchema.index({ isActive: 1 });
 MedicationDefinitionSchema.index({ childId: 1, isActive: 1 });
 
 export default mongoose.models.MedicationDefinition ||
-  mongoose.model<IMedicationDefinition>('MedicationDefinition', MedicationDefinitionSchema);
+  mongoose.model<IMedicationDefinition>(
+    "MedicationDefinition",
+    MedicationDefinitionSchema
+  );

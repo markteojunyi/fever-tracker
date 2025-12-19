@@ -12,7 +12,7 @@ export interface TemperatureReading {
   id?: string;
   childId: string;
   temperature: number;
-  temperatureUnit: 'C' | 'F';
+  temperatureUnit: "C" | "F";
   timestamp: string;
   notes?: string;
   createdAt: string;
@@ -24,7 +24,7 @@ export interface MedicationDefinition {
   childId: string;
   name: string;
   dosage: number;
-  dosageUnit: 'pills' | 'ml';
+  dosageUnit: "pills" | "ml";
   frequency: number;
   maxDosesPerDay: number;
   startDate: string;
@@ -40,7 +40,7 @@ export interface MedicationLog {
   childId: string;
   administeredAt: string;
   dosageAdministered: number;
-  dosageUnit: 'pills' | 'ml';
+  dosageUnit: "pills" | "ml";
   administeredBy: string;
   createdAt: string;
 }
@@ -49,12 +49,12 @@ export interface TemperatureTrend {
   currentTemp: number;
   peakTemp: number;
   lowestTemp: number;
-  trend: 'improving' | 'worsening' | 'stable';
-  trendDirection: 'up' | 'down' | 'flat';
+  trend: "improving" | "worsening" | "stable";
+  trendDirection: "up" | "down" | "flat";
   avgTempLast24h: number;
   readings: Array<{
     timestamp: string;
     temperature: number;
-    unit: 'C' | 'F';
+    unit: "C" | "F";
   }>;
 }

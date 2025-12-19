@@ -3,11 +3,11 @@
 // Shows recent medication doses
 // ============================================
 
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { MedicationLog, MedicationDefinition } from '@/lib/types';
-import { formatDateTime } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { MedicationLog, MedicationDefinition } from "@/lib/types";
+import { formatDateTime } from "@/lib/utils";
 
 interface MedicationHistoryProps {
   logs: MedicationLog[];
@@ -15,7 +15,11 @@ interface MedicationHistoryProps {
   onDeleteLog: (logId: string) => void;
 }
 
-export default function MedicationHistory({ logs, medications, onDeleteLog }: MedicationHistoryProps) {
+export default function MedicationHistory({
+  logs,
+  medications,
+  onDeleteLog,
+}: MedicationHistoryProps) {
   const [isClient, setIsClient] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -32,11 +36,15 @@ export default function MedicationHistory({ logs, medications, onDeleteLog }: Me
   }
 
   const sortedLogs = [...logs].sort(
-    (a, b) => new Date(b.administeredAt).getTime() - new Date(a.administeredAt).getTime()
+    (a, b) =>
+      new Date(b.administeredAt).getTime() -
+      new Date(a.administeredAt).getTime()
   );
 
   const handleDelete = async (logId: string) => {
-    const confirmed = window.confirm('Are you sure you want to delete this medication log?');
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this medication log?"
+    );
     if (!confirmed) return;
 
     setDeletingId(logId);
@@ -48,17 +56,24 @@ export default function MedicationHistory({ logs, medications, onDeleteLog }: Me
       <h3 className="text-lg font-bold mb-3">Recent Medication Doses</h3>
       <div className="space-y-2">
         {sortedLogs.map((log) => {
-          const med = medications.find((m) => m._id === log.medicationDefinitionId);
+          const med = medications.find(
+            (m) => m._id === log.medicationDefinitionId
+          );
           const isDeleting = deletingId === log._id;
-          
+
           return (
-            <div key={log._id} className="flex justify-between items-center p-2 bg-gray-200 rounded">
+            <div
+              key={log._id}
+              className="flex justify-between items-center p-2 bg-gray-200 rounded"
+            >
               <div className="flex-1">
                 <p className="font-semibold">{med?.name}</p>
                 <p className="text-sm text-gray-800">
-                  {isClient ? formatDateTime(log.administeredAt) : '---'}
+                  {isClient ? formatDateTime(log.administeredAt) : "---"}
                 </p>
-                <p className="text-xs text-gray-700">Given by: {log.administeredBy}</p>
+                <p className="text-xs text-gray-700">
+                  Given by: {log.administeredBy}
+                </p>
               </div>
               <div className="text-right flex items-center gap-3">
                 <div>
@@ -71,7 +86,7 @@ export default function MedicationHistory({ logs, medications, onDeleteLog }: Me
                   disabled={isDeleting}
                   className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 disabled:bg-gray-400 text-sm font-semibold"
                 >
-                  {isDeleting ? '...' : '🗑️'}
+                  {isDeleting ? "..." : "🗑️"}
                 </button>
               </div>
             </div>

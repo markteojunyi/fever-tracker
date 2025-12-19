@@ -2,7 +2,7 @@
 // FILE: lib/models/Child.ts
 // ============================================
 
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IChild extends Document {
   name: string;
@@ -15,12 +15,12 @@ const ChildSchema = new Schema<IChild>(
   {
     name: {
       type: String,
-      required: [true, 'Please provide a name'],
+      required: [true, "Please provide a name"],
       trim: true,
     },
     dateOfBirth: {
       type: Date,
-      required: [true, 'Please provide date of birth'],
+      required: [true, "Please provide date of birth"],
     },
     weight: {
       type: Number,
@@ -34,4 +34,5 @@ const ChildSchema = new Schema<IChild>(
   { timestamps: true }
 );
 
-export default mongoose.models.Child || mongoose.model<IChild>('Child', ChildSchema);
+export default mongoose.models.Child ||
+  mongoose.model<IChild>("Child", ChildSchema);

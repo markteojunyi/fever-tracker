@@ -1,16 +1,18 @@
-import { TemperatureReading, TemperatureTrend } from './types';
+import { TemperatureReading, TemperatureTrend } from "./types";
 
 /**
  * Calculate temperature trend from readings
  */
-export function calculateTrend(readings: TemperatureReading[]): TemperatureTrend {
+export function calculateTrend(
+  readings: TemperatureReading[]
+): TemperatureTrend {
   if (readings.length === 0) {
     return {
       currentTemp: 0,
       peakTemp: 0,
       lowestTemp: 0,
-      trend: 'stable',
-      trendDirection: 'flat',
+      trend: "stable",
+      trendDirection: "flat",
       avgTempLast24h: 0,
       readings: [],
     };
@@ -26,11 +28,16 @@ export function calculateTrend(readings: TemperatureReading[]): TemperatureTrend
 
   // Determine trend: compare last reading with first reading
   const firstTemp = sorted[0].temperature;
-  let trendDirection: 'up' | 'down' | 'flat' = 'flat';
-  if (currentTemp > firstTemp + 0.3) trendDirection = 'up';
-  if (currentTemp < firstTemp - 0.3) trendDirection = 'down';
+  let trendDirection: "up" | "down" | "flat" = "flat";
+  if (currentTemp > firstTemp + 0.3) trendDirection = "up";
+  if (currentTemp < firstTemp - 0.3) trendDirection = "down";
 
-  const trend = trendDirection === 'down' ? 'improving' : trendDirection === 'up' ? 'worsening' : 'stable';
+  const trend =
+    trendDirection === "down"
+      ? "improving"
+      : trendDirection === "up"
+        ? "worsening"
+        : "stable";
 
   // Average temp last 24h
   const last24h = sorted.filter((r) => {
@@ -39,7 +46,9 @@ export function calculateTrend(readings: TemperatureReading[]): TemperatureTrend
   });
 
   const avgTempLast24h =
-    last24h.length > 0 ? last24h.reduce((sum, r) => sum + r.temperature, 0) / last24h.length : 0;
+    last24h.length > 0
+      ? last24h.reduce((sum, r) => sum + r.temperature, 0) / last24h.length
+      : 0;
 
   return {
     currentTemp,
@@ -61,11 +70,11 @@ export function calculateTrend(readings: TemperatureReading[]): TemperatureTrend
  */
 export function formatDateTime(isoString: string): string {
   const date = new Date(isoString);
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -75,9 +84,9 @@ export function formatDateTime(isoString: string): string {
 export function checkOverdoseRisk(
   logsToday: number,
   maxDosesPerDay: number
-): 'safe' | 'warning' | 'dangerous' {
+): "safe" | "warning" | "dangerous" {
   const percentage = (logsToday / maxDosesPerDay) * 100;
-  if (percentage >= 100) return 'dangerous';
-  if (percentage >= 75) return 'warning';
-  return 'safe';
+  if (percentage >= 100) return "dangerous";
+  if (percentage >= 75) return "warning";
+  return "safe";
 }

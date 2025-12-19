@@ -3,10 +3,10 @@
 // Form to add a new medication
 // ============================================
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { MedicationDefinition } from '@/lib/types';
+import { useState } from "react";
+import { MedicationDefinition } from "@/lib/types";
 
 interface AddMedicationFormProps {
   childId: string;
@@ -19,29 +19,31 @@ export default function AddMedicationForm({
   onMedicationAdded,
   onClose,
 }: AddMedicationFormProps) {
-  const [name, setName] = useState('');
-  const [dosage, setDosage] = useState('');
-  const [dosageUnit, setDosageUnit] = useState<'pills' | 'ml'>('ml');
-  const [frequency, setFrequency] = useState('6');
-  const [maxDosesPerDay, setMaxDosesPerDay] = useState('4');
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState('');
+  const [name, setName] = useState("");
+  const [dosage, setDosage] = useState("");
+  const [dosageUnit, setDosageUnit] = useState<"pills" | "ml">("ml");
+  const [frequency, setFrequency] = useState("6");
+  const [maxDosesPerDay, setMaxDosesPerDay] = useState("4");
+  const [startDate, setStartDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [endDate, setEndDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name || !dosage || !frequency || !maxDosesPerDay) {
-      alert('Please fill in all required fields');
+      alert("Please fill in all required fields");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/medications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/medications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           childId,
           name,
@@ -55,14 +57,14 @@ export default function AddMedicationForm({
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to add medication');
+      if (!res.ok) throw new Error("Failed to add medication");
 
       const newMedication = await res.json();
       onMedicationAdded(newMedication);
-      alert('✅ Medication added successfully!');
+      alert("✅ Medication added successfully!");
       onClose();
     } catch (err) {
-      alert('❌ Error adding medication');
+      alert("❌ Error adding medication");
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -105,10 +107,14 @@ export default function AddMedicationForm({
               />
             </div>
             <div className="w-24">
-              <label className="block text-sm font-semibold mb-2 text-black">Unit:</label>
+              <label className="block text-sm font-semibold mb-2 text-black">
+                Unit:
+              </label>
               <select
                 value={dosageUnit}
-                onChange={(e) => setDosageUnit(e.target.value as 'pills' | 'ml')}
+                onChange={(e) =>
+                  setDosageUnit(e.target.value as "pills" | "ml")
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="pills">pills</option>
@@ -167,7 +173,9 @@ export default function AddMedicationForm({
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-semibold mb-2 text-black">End Date (optional):</label>
+              <label className="block text-sm font-semibold mb-2 text-black">
+                End Date (optional):
+              </label>
               <input
                 type="date"
                 value={endDate}
@@ -190,7 +198,7 @@ export default function AddMedicationForm({
               disabled={isSubmitting}
               className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 disabled:bg-gray-400"
             >
-              {isSubmitting ? 'Adding...' : 'Add Medication'}
+              {isSubmitting ? "Adding..." : "Add Medication"}
             </button>
           </div>
         </form>

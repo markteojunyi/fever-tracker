@@ -2,7 +2,7 @@
 // FILE: lib/models/MedicationReminder.ts
 // ============================================
 
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMedicationReminder extends Document {
   medicationDefinitionId: mongoose.Types.ObjectId;
@@ -18,17 +18,17 @@ const MedicationReminderSchema = new Schema<IMedicationReminder>(
   {
     medicationDefinitionId: {
       type: Schema.Types.ObjectId,
-      ref: 'MedicationDefinition',
-      required: [true, 'Please provide medicationDefinitionId'],
+      ref: "MedicationDefinition",
+      required: [true, "Please provide medicationDefinitionId"],
     },
     childId: {
       type: Schema.Types.ObjectId,
-      ref: 'Child',
-      required: [true, 'Please provide childId'],
+      ref: "Child",
+      required: [true, "Please provide childId"],
     },
     scheduledTime: {
       type: Date,
-      required: [true, 'Please provide scheduled time'],
+      required: [true, "Please provide scheduled time"],
     },
     isCompleted: {
       type: Boolean,
@@ -57,4 +57,7 @@ MedicationReminderSchema.index({ isCompleted: 1 });
 MedicationReminderSchema.index({ childId: 1, isCompleted: 1 });
 
 export default mongoose.models.MedicationReminder ||
-  mongoose.model<IMedicationReminder>('MedicationReminder', MedicationReminderSchema);
+  mongoose.model<IMedicationReminder>(
+    "MedicationReminder",
+    MedicationReminderSchema
+  );
