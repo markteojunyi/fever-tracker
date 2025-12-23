@@ -9,7 +9,7 @@ import React from "react";
 import { MedicationDefinition, MedicationLog } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { checkOverdoseRisk } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface MedicationEntryProps {
   childId: string;
@@ -26,22 +26,26 @@ export default function MedicationEntry({
 }: MedicationEntryProps) {
   const [selectedMedId, setSelectedMedId] = useState("");
 
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
-    // When medications go from empty to having items, select the first one
-    if (medications.length > 0 && !selectedMedId && medications[0]._id) {
+  // Only auto-select on first mount when medications are available
+  if (!hasInitialized.current && medications.length > 0 && medications[0]._id) {
+    setSelectedMedId(medications[0]._id);
+    hasInitialized.current = true;
+    return;
+  }
+
+  // When medications change, check if current selection still exists
+  if (medications.length > 0 && selectedMedId) {
+    const currentMedStillExists = medications.find(
+      (m) => m._id === selectedMedId
+    );
+    if (!currentMedStillExists && medications[0]._id) {
       setSelectedMedId(medications[0]._id);
     }
-
-    // When medications change and current selection doesn't exist, select first
-    if (medications.length > 0 && selectedMedId) {
-      const currentMedStillExists = medications.find(
-        (m) => m._id === selectedMedId
-      );
-      if (!currentMedStillExists && medications[0]._id) {
-        setSelectedMedId(medications[0]._id);
-      }
-    }
-  }, [medications, selectedMedId]); // ← Add selectedMedId back!
+  }
+}, [medications, selectedMedId]);
 
   const [dosage, setDosage] = useState("");
   const [administeredBy, setAdministeredBy] = useState("");

@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect } from "react";
 import { MedicationLog, MedicationDefinition } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
 
@@ -23,7 +23,7 @@ export default function MedicationHistory({
   const [isClient, setIsClient] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsClient(true);
   }, []);
 
