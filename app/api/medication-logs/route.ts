@@ -16,7 +16,10 @@ export async function GET(request: NextRequest) {
     );
     const date = request.nextUrl.searchParams.get("date"); // YYYY-MM-DD format
 
-    const query: any = {};
+    const query: {
+      childId?: string;
+      medicationDefinitionId?: string;
+    } = {};
     if (childId) query.childId = childId;
     if (medicationDefinitionId)
       query.medicationDefinitionId = medicationDefinitionId;

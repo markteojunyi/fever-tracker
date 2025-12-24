@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
     const childId = request.nextUrl.searchParams.get("childId");
     const isActive = request.nextUrl.searchParams.get("isActive");
 
-    const query: any = {};
+    const query: {
+      childId?: string;
+      isActive?: boolean;
+    } = {};
     if (childId) query.childId = childId;
     if (isActive === "true") query.isActive = true;
     if (isActive === "false") query.isActive = false;
@@ -53,12 +56,14 @@ export async function POST(request: NextRequest) {
     console.log("Created medication:", medication);
 
     return NextResponse.json(medication, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     console.error("Error creating medication:", error);
     return NextResponse.json(
       {
         error: "Failed to create medication",
-        details: error.message,
+        details: errorMessage,
       },
       { status: 500 }
     );

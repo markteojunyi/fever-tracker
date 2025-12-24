@@ -14,7 +14,10 @@ export async function GET(request: NextRequest) {
     const childId = request.nextUrl.searchParams.get("childId");
     const isCompleted = request.nextUrl.searchParams.get("isCompleted");
 
-    const query: any = {};
+    const query: {
+      childId?: string;
+      isCompleted?: boolean;
+    } = {};
     if (childId) query.childId = childId;
     if (isCompleted === "true") query.isCompleted = true;
     if (isCompleted === "false") query.isCompleted = false;

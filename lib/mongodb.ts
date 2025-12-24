@@ -5,18 +5,30 @@
 
 import mongoose from "mongoose";
 
+// Define the type for our global mongoose cache
+interface MongooseCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
+// Extend the global namespace
+declare global {
+  var mongoose: MongooseCache | undefined;
+}
+
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   throw new Error("Please define MONGODB_URI in .env.local");
 }
 
-// Cache connection to prevent multiple connections
-let cached = (global as any).mongoose;
-
-if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+// Initialize global mongoose cache if it doesn't exist
+if (!global.mongoose) {
+  global.mongoose = { conn: null, promise: null };
 }
+
+// Cache connection to prevent multiple connections
+const cached = global.mongoose;
 
 async function connectDB() {
   if (cached.conn) {

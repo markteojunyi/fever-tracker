@@ -29,23 +29,27 @@ export default function MedicationEntry({
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-  // Only auto-select on first mount when medications are available
-  if (!hasInitialized.current && medications.length > 0 && medications[0]._id) {
-    setSelectedMedId(medications[0]._id);
-    hasInitialized.current = true;
-    return;
-  }
-
-  // When medications change, check if current selection still exists
-  if (medications.length > 0 && selectedMedId) {
-    const currentMedStillExists = medications.find(
-      (m) => m._id === selectedMedId
-    );
-    if (!currentMedStillExists && medications[0]._id) {
+    // Only auto-select on first mount when medications are available
+    if (
+      !hasInitialized.current &&
+      medications.length > 0 &&
+      medications[0]._id
+    ) {
       setSelectedMedId(medications[0]._id);
+      hasInitialized.current = true;
+      return;
     }
-  }
-}, [medications, selectedMedId]);
+
+    // When medications change, check if current selection still exists
+    if (medications.length > 0 && selectedMedId) {
+      const currentMedStillExists = medications.find(
+        (m) => m._id === selectedMedId
+      );
+      if (!currentMedStillExists && medications[0]._id) {
+        setSelectedMedId(medications[0]._id);
+      }
+    }
+  }, [medications, selectedMedId]);
 
   const [dosage, setDosage] = useState("");
   const [administeredBy, setAdministeredBy] = useState("");

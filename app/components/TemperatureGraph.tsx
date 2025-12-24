@@ -22,8 +22,12 @@ interface TemperatureGraphProps {
 }
 
 // Custom tick renderer for multi-line labels
-const CustomTick: React.FC<any> = ({ x, y, payload }) => {
-  const date = new Date(payload.value);
+const CustomTick: React.FC<{
+  x?: number;
+  y?: number;
+  payload?: { value: string | number | Date };
+}> = ({ x, y, payload }) => {
+  const date = new Date(payload?.value || 0);
   const dateStr = date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
