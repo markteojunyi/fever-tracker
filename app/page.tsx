@@ -5,6 +5,7 @@
 
 "use client";
 
+import { signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import ChildSelector from "./components/ChildSelector";
 import StatusCard from "./components/StatusCard";
@@ -248,6 +249,12 @@ export default function Home() {
       <main className="bg-gray-100 min-h-screen pb-8">
         <header className="bg-blue-600 text-white p-4 sticky top-0 shadow">
           <h1 className="text-2xl font-bold">🌡️ Fever Tracker</h1>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Logout
+          </button>
         </header>
         <div className="max-w-2xl mx-auto p-4 text-center mt-8">
           <p className="text-xl">Loading...</p>
@@ -265,6 +272,12 @@ export default function Home() {
           <p className="text-sm opacity-90">
             Track temperature & medication for your child
           </p>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Logout
+          </button>
         </header>
 
         <div className="max-w-2xl mx-auto p-4">
@@ -276,7 +289,7 @@ export default function Home() {
             <form onSubmit={handleAddChild} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold mb-2 text-black">
-                  "Child's Name:"
+                  Child&apos;s Name:
                 </label>
                 <input
                   type="text"
@@ -336,9 +349,22 @@ export default function Home() {
     );
   }
 
-  if (!currentChild) {
-    return <div className="p-4 text-center">No child selected</div>;
-  }
+if (!currentChild) {
+  return (
+    <main className="bg-gray-100 min-h-screen">
+      <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">🌡️ Fever Tracker</h1>
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Logout
+        </button>
+      </header>
+      <div className="p-4 text-center">No child selected</div>
+    </main>
+  );
+}
 
   console.log("=== RENDER CHECK ===");
   console.log("selectedChildId:", selectedChildId);
@@ -353,6 +379,12 @@ export default function Home() {
         <p className="text-sm opacity-90">
           Track temperature & medication for your child
         </p>
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Logout
+        </button>
       </header>
 
       <div className="max-w-2xl mx-auto p-4">

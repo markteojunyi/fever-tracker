@@ -23,9 +23,11 @@ export default function MedicationHistory({
   const [isClient, setIsClient] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useLayoutEffect(() => {
     setIsClient(true);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (logs.length === 0) {
     return (

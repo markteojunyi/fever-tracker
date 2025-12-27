@@ -35,6 +35,7 @@ export default function MedicationEntry({
       medications.length > 0 &&
       medications[0]._id
     ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedMedId(medications[0]._id);
       hasInitialized.current = true;
       return;
