@@ -1,19 +1,18 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactCompiler: true,
+  outputFileTracingRoot: path.join(__dirname),
 
-  // Add environment variables for Amplify
   env: {
     MONGODB_URI: process.env.MONGODB_URI,
   },
 
-  // Security headers
   async headers() {
     return [
       {
-        // Apply these headers to all routes
         source: "/:path*",
         headers: [
           {
@@ -39,15 +38,22 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self';",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.ingest.us.sentry.io;",
           },
         ],
       },
     ];
   },
 
-  // Remove X-Powered-By header
   poweredByHeader: false,
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  telemetry: false,
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+});

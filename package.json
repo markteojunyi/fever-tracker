@@ -12,6 +12,7 @@
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\""
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.46.0",
     "bcryptjs": "^3.0.3",
     "mongoose": "^8.19.3",
     "next": "^16.0.10",
@@ -29,6 +30,7 @@
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
     "babel-plugin-react-compiler": "1.0.0",
+    "baseline-browser-mapping": "^2.10.12",
     "eslint": "^9.39.2",
     "eslint-config-next": "16.0.1",
     "eslint-config-prettier": "^10.1.8",

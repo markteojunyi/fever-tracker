@@ -1,8 +1,3 @@
-// ============================================
-// FILE: app/components/AddMedicationForm.tsx
-// Form to add a new medication
-// ============================================
-
 "use client";
 
 import { useState } from "react";
@@ -29,12 +24,14 @@ export default function AddMedicationForm({
   );
   const [endDate, setEndDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     if (!name || !dosage || !frequency || !maxDosesPerDay) {
-      alert("Please fill in all required fields");
+      setError("Please fill in all required fields");
       return;
     }
 
@@ -61,40 +58,57 @@ export default function AddMedicationForm({
 
       const newMedication = await res.json();
       onMedicationAdded(newMedication);
-      alert("✅ Medication added successfully!");
       onClose();
     } catch (err) {
-      alert("❌ Error adding medication");
+      setError("Failed to add medication. Please try again.");
       console.error(err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-        <h2 className="text-2xl font-bold mb-4 text-black">Add Medication</h2>
+  const inputClass =
+    "w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400";
+  const labelClass = "block text-xs font-semibold text-slate-500 mb-1";
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+        <div className="flex justify-between items-center px-6 pt-5 pb-4 border-b border-slate-100">
+          <h2 className="text-base font-bold text-slate-800">Add Medication</h2>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 text-xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+          {error && (
+            <div className="px-3 py-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm">
+              {error}
+            </div>
+          )}
+
           <div>
-            <label className="block text-sm font-semibold mb-2 text-black">
-              Medication Name: <span className="text-red-600">*</span>
+            <label className={labelClass}>
+              Medication Name <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Paracetamol, Ibuprofen"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               required
             />
           </div>
 
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-sm font-semibold mb-2 text-black">
-                Dosage: <span className="text-red-600">*</span>
+              <label className={labelClass}>
+                Dosage <span className="text-rose-500">*</span>
               </label>
               <input
                 type="number"
@@ -102,20 +116,16 @@ export default function AddMedicationForm({
                 value={dosage}
                 onChange={(e) => setDosage(e.target.value)}
                 placeholder="e.g., 250"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
                 required
               />
             </div>
             <div className="w-24">
-              <label className="block text-sm font-semibold mb-2 text-black">
-                Unit:
-              </label>
+              <label className={labelClass}>Unit</label>
               <select
                 value={dosageUnit}
-                onChange={(e) =>
-                  setDosageUnit(e.target.value as "pills" | "ml")
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setDosageUnit(e.target.value as "pills" | "ml")}
+                className={inputClass}
               >
                 <option value="pills">pills</option>
                 <option value="ml">ml</option>
@@ -125,13 +135,13 @@ export default function AddMedicationForm({
 
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-sm font-semibold mb-2 text-black">
-                Frequency (hours): <span className="text-red-600">*</span>
+              <label className={labelClass}>
+                Frequency <span className="text-rose-500">*</span>
               </label>
               <select
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               >
                 <option value="4">Every 4 hours</option>
                 <option value="6">Every 6 hours</option>
@@ -141,62 +151,60 @@ export default function AddMedicationForm({
               </select>
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-semibold mb-2 text-black">
-                Max Doses/Day: <span className="text-red-600">*</span>
+              <label className={labelClass}>
+                Max/Day <span className="text-rose-500">*</span>
               </label>
               <select
                 value={maxDosesPerDay}
                 onChange={(e) => setMaxDosesPerDay(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               >
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-sm font-semibold mb-2 text-black">
-                Start Date: <span className="text-red-600">*</span>
+              <label className={labelClass}>
+                Start Date <span className="text-rose-500">*</span>
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
                 required
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-semibold mb-2 text-black">
-                End Date (optional):
-              </label>
+              <label className={labelClass}>End Date (optional)</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
           </div>
 
-          <div className="flex gap-2 pt-4">
+          <div className="flex gap-2 pt-2 pb-1">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-300 text-black font-bold py-2 px-4 rounded-lg hover:bg-gray-400"
+              className="flex-1 border border-slate-200 text-slate-600 font-semibold py-2 px-4 rounded-lg text-sm hover:bg-slate-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 disabled:bg-gray-400"
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg text-sm disabled:opacity-50 transition-colors"
+              style={{ color: "#ffffff" }}
             >
               {isSubmitting ? "Adding..." : "Add Medication"}
             </button>

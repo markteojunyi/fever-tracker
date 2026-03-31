@@ -1,12 +1,7 @@
-// ============================================
-// FILE: app/page.tsx
-// Main dashboard with Add Child form
-// ============================================
-
 "use client";
 
 import { signOut } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ChildSelector from "./components/ChildSelector";
 import StatusCard from "./components/StatusCard";
 import TemperatureEntry from "./components/TemperatureEntry";
@@ -14,14 +9,49 @@ import TemperatureGraph from "./components/TemperatureGraph";
 import MedicationEntry from "./components/MedicationEntry";
 import MedicationHistory from "./components/MedicationHistory";
 import AddMedicationForm from "./components/AddMedicationForm";
+import Toast from "./components/Toast";
 import {
   Child,
   TemperatureReading,
   MedicationDefinition,
   MedicationLog,
-  TemperatureTrend,
 } from "@/lib/types";
 import { calculateTrend } from "@/lib/utils";
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-3 mt-6">
+      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+        {label}
+      </span>
+      <div className="flex-1 h-px bg-slate-200" />
+    </div>
+  );
+}
+
+function AppHeader({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <header className="bg-slate-800 sticky top-0 z-40 shadow-md">
+      <div className="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: "#ffffff" }}>
+            🌡️ Fever Tracker
+          </h1>
+          <p className="text-xs" style={{ color: "#94a3b8" }}>
+            Temperature & medication log
+          </p>
+        </div>
+        <button
+          onClick={onSignOut}
+          className="text-sm border border-slate-600 rounded-lg px-3 py-1.5 transition-colors hover:border-slate-400"
+          style={{ color: "#cbd5e1" }}
+        >
+          Sign out
+        </button>
+      </div>
+    </header>
+  );
+}
 
 export default function Home() {
   const [children, setChildren] = useState<Child[]>([]);
@@ -31,13 +61,10 @@ export default function Home() {
   const [medications, setMedications] = useState<MedicationDefinition[]>([]);
   const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
 
-  const [temperaturePreference, setTemperaturePreference] = useState<"C" | "F">(
-    "C"
-  );
+  const [temperaturePreference, setTemperaturePreference] = useState<"C" | "F">("C");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Add Child Form State
   const [showAddChildForm, setShowAddChildForm] = useState(false);
   const [newChildName, setNewChildName] = useState("");
   const [newChildDOB, setNewChildDOB] = useState("");
@@ -45,7 +72,17 @@ export default function Home() {
   const [addingChild, setAddingChild] = useState(false);
   const [showAddMedicationForm, setShowAddMedicationForm] = useState(false);
 
-  // Fetch all children on mount
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const showToast = useCallback((message: string, type: "success" | "error") => {
+    setToast({ message, type });
+  }, []);
+
+  const handleSignOut = () => signOut({ callbackUrl: "/login" });
+
   useEffect(() => {
     fetchChildren();
   }, []);
@@ -80,43 +117,28 @@ export default function Home() {
       if (!childId) return;
 
       const tempRes = await fetch(`/api/temperatures?childId=${childId}`);
-      if (tempRes.ok) {
-        const tempData = await tempRes.json();
-        setTemperatures(tempData);
-      }
+      if (tempRes.ok) setTemperatures(await tempRes.json());
 
-      if (!selectedChildId) return;
-
-      const medRes = await fetch(
-        `/api/medications?childId=${childId}&isActive=true`
-      );
-      if (medRes.ok) {
-        const medData = await medRes.json();
-        setMedications(medData);
-      }
+      const medRes = await fetch(`/api/medications?childId=${childId}&isActive=true`);
+      if (medRes.ok) setMedications(await medRes.json());
 
       const logsRes = await fetch(`/api/medication-logs?childId=${childId}`);
-      if (logsRes.ok) {
-        const logsData = await logsRes.json();
-        setMedicationLogs(logsData);
-      }
+      if (logsRes.ok) setMedicationLogs(await logsRes.json());
     } catch (err) {
       console.error("Error fetching child data:", err);
     }
   };
 
-  // Refresh data when child is selected
   useEffect(() => {
     if (!selectedChildId) return;
     fetchChildData(selectedChildId);
   }, [selectedChildId]);
 
-  // Handle Add Child
   const handleAddChild = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!newChildName || !newChildDOB) {
-      alert("Please fill in name and date of birth");
+      showToast("Please fill in name and date of birth", "error");
       return;
     }
 
@@ -142,19 +164,16 @@ export default function Home() {
       setNewChildName("");
       setNewChildDOB("");
       setNewChildWeight("");
-      alert("✅ Child added successfully!");
+      showToast("Child added successfully", "success");
     } catch (err) {
-      alert("❌ Error adding child");
+      showToast("Error adding child", "error");
       console.error(err);
     } finally {
       setAddingChild(false);
     }
   };
 
-  // Handle adding temperature
-  const handleAddTemperature = async (
-    reading: Omit<TemperatureReading, "_id">
-  ) => {
+  const handleAddTemperature = async (reading: Omit<TemperatureReading, "_id">) => {
     try {
       const res = await fetch("/api/temperatures", {
         method: "POST",
@@ -172,19 +191,14 @@ export default function Home() {
 
       const newReading = await res.json();
       setTemperatures([...temperatures, newReading]);
-      alert("✅ Temperature logged successfully!");
+      showToast("Temperature logged", "success");
     } catch (err) {
-      alert("❌ Error saving temperature");
+      showToast("Error saving temperature", "error");
       console.error(err);
     }
   };
 
-  // Handle adding medication log
   const handleAddMedicationLog = async (log: Omit<MedicationLog, "_id">) => {
-    console.log("=== BEFORE LOGGING ===");
-    console.log("selectedChildId:", selectedChildId);
-    console.log("activeMeds:", activeMeds);
-
     try {
       const res = await fetch("/api/medication-logs", {
         method: "POST",
@@ -203,35 +217,30 @@ export default function Home() {
 
       const newLog = await res.json();
       setMedicationLogs([...medicationLogs, newLog]);
-      alert("✅ Medication logged successfully!");
+      showToast("Medication logged", "success");
     } catch (err) {
-      alert("❌ Error saving medication");
+      showToast("Error saving medication", "error");
       console.error(err);
     }
   };
 
-  // Add the new delete function RIGHT HERE, after handleAddMedicationLog
   const handleDeleteMedicationLog = async (logId: string) => {
     try {
       const res = await fetch(`/api/medication-logs?id=${logId}`, {
         method: "DELETE",
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to delete log");
-      }
+      if (!res.ok) throw new Error("Failed to delete log");
 
-      // Update state to remove the deleted log
       setMedicationLogs(medicationLogs.filter((log) => log._id !== logId));
-      alert("✅ Medication log deleted successfully!");
+      showToast("Medication log deleted", "success");
     } catch (err) {
-      alert("❌ Error deleting medication log");
+      showToast("Error deleting medication log", "error");
       console.error(err);
     }
   };
 
   const currentChild = children.find((c) => c._id === selectedChildId);
-  const childTemps = temperatures;
   const activeMeds = medications;
 
   const today = new Date();
@@ -242,81 +251,67 @@ export default function Home() {
     return logDate.getTime() === today.getTime();
   });
 
-  const trend = calculateTrend(childTemps);
+  const trend = calculateTrend(temperatures);
 
   if (loading) {
     return (
-      <main className="bg-gray-100 min-h-screen pb-8">
-        <header className="bg-blue-600 text-white p-4 sticky top-0 shadow">
-          <h1 className="text-2xl font-bold">🌡️ Fever Tracker</h1>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Logout
-          </button>
-        </header>
-        <div className="max-w-2xl mx-auto p-4 text-center mt-8">
-          <p className="text-xl">Loading...</p>
+      <main className="bg-slate-50 min-h-screen">
+        <AppHeader onSignOut={handleSignOut} />
+        <div className="max-w-2xl mx-auto p-4 text-center mt-12">
+          <p className="text-slate-500">Loading...</p>
         </div>
       </main>
     );
   }
 
-  // Show Add Child Form if no children exist
   if (children.length === 0 || showAddChildForm) {
     return (
-      <main className="bg-gray-100 min-h-screen pb-8">
-        <header className="bg-blue-600 text-white p-4 sticky top-0 shadow">
-          <h1 className="text-2xl font-bold">🌡️ Fever Tracker</h1>
-          <p className="text-sm opacity-90">
-            Track temperature & medication for your child
-          </p>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Logout
-          </button>
-        </header>
+      <main className="bg-slate-50 min-h-screen pb-8">
+        <AppHeader onSignOut={handleSignOut} />
 
-        <div className="max-w-2xl mx-auto p-4">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-bold mb-4 text-black">
+        <div className="max-w-2xl mx-auto p-4 mt-4">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+            <h2 className="text-lg font-bold text-slate-800 mb-4">
               Add Your Child
             </h2>
 
+            {error && (
+              <div className="mb-4 px-3 py-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm">
+                {error}
+              </div>
+            )}
+
             <form onSubmit={handleAddChild} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold mb-2 text-black">
-                  Child&apos;s Name:
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Child&apos;s Name
                 </label>
                 <input
                   type="text"
                   value={newChildName}
                   onChange={(e) => setNewChildName(e.target.value)}
                   placeholder="e.g., Emma"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-black">
-                  Date of Birth:
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Date of Birth
                 </label>
                 <input
                   type="date"
                   value={newChildDOB}
                   onChange={(e) => setNewChildDOB(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-black">
-                  Weight (kg) - Optional:
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Weight (kg) — optional
                 </label>
                 <input
                   type="number"
@@ -324,170 +319,140 @@ export default function Home() {
                   value={newChildWeight}
                   onChange={(e) => setNewChildWeight(e.target.value)}
                   placeholder="e.g., 18"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={addingChild}
-                className="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm disabled:opacity-50 transition-colors"
+                style={{ color: "#ffffff" }}
               >
                 {addingChild ? "Adding..." : "Add Child"}
               </button>
             </form>
-
-            {error && (
-              <div className="mt-4 bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                <p className="text-red-700 font-bold">⚠️ Error</p>
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
           </div>
         </div>
+
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onDismiss={() => setToast(null)}
+          />
+        )}
       </main>
     );
   }
 
-if (!currentChild) {
-  return (
-    <main className="bg-gray-100 min-h-screen">
-      <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">🌡️ Fever Tracker</h1>
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Logout
-        </button>
-      </header>
-      <div className="p-4 text-center">No child selected</div>
-    </main>
-  );
-}
-
-  console.log("=== RENDER CHECK ===");
-  console.log("selectedChildId:", selectedChildId);
-  console.log("activeMeds:", activeMeds);
-  console.log("activeMeds.length:", activeMeds.length);
-  console.log("Should MedicationEntry show?", activeMeds.length > 0);
+  if (!currentChild) {
+    return (
+      <main className="bg-slate-50 min-h-screen">
+        <AppHeader onSignOut={handleSignOut} />
+        <div className="p-4 text-center text-slate-500">No child selected</div>
+      </main>
+    );
+  }
 
   return (
-    <main className="bg-gray-100 min-h-screen pb-8">
-      <header className="bg-blue-600 text-white p-4 sticky top-0 shadow">
-        <h1 className="text-2xl font-bold">🌡️ Fever Tracker</h1>
-        <p className="text-sm opacity-90">
-          Track temperature & medication for your child
-        </p>
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Logout
-        </button>
-      </header>
+    <main className="bg-slate-50 min-h-screen pb-12">
+      <AppHeader onSignOut={handleSignOut} />
 
-      <div className="max-w-2xl mx-auto p-4">
+      <div className="max-w-2xl mx-auto px-4 pt-4">
         {error && (
-          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-4">
-            <p className="text-red-700 font-bold">⚠️ Error</p>
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mb-4 px-3 py-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm">
+            {error}
           </div>
         )}
 
-        <ChildSelector
-          selectedChildId={selectedChildId}
-          onSelectChild={setSelectedChildId}
-        >
-          {children}
-        </ChildSelector>
-
-        <div className="flex gap-2 mb-4">
+        {/* Child selector + add child */}
+        <div className="flex items-center gap-2 mb-2">
+          <ChildSelector
+            selectedChildId={selectedChildId}
+            onSelectChild={setSelectedChildId}
+          >
+            {children}
+          </ChildSelector>
           <button
             onClick={() => setShowAddChildForm(true)}
-            className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600"
+            className="shrink-0 text-xs text-indigo-600 border border-indigo-200 hover:bg-indigo-50 rounded-full px-3 py-1.5 font-medium transition-colors"
           >
-            + Add Another Child
+            + Add child
           </button>
         </div>
 
-        <StatusCard trend={trend} unit={temperaturePreference} />
-
+        {/* Alerts */}
         {trend.currentTemp > 39 && (
-          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-4">
-            <p className="text-red-700 font-bold">🚨 HIGH FEVER ALERT</p>
-            <p className="text-sm text-red-600">
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-3">
+            <p className="text-rose-700 font-bold text-sm">High Fever Alert</p>
+            <p className="text-rose-600 text-xs mt-0.5">
               Temperature is {trend.currentTemp.toFixed(1)}°
               {temperaturePreference}. Consider contacting a doctor.
             </p>
           </div>
         )}
 
-        {trend.trend === "worsening" && (
-          <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 mb-4">
-            <p className="text-orange-700 font-bold">⚠️ FEVER WORSENING</p>
-            <p className="text-sm text-orange-600">
+        {trend.trend === "worsening" && trend.currentTemp <= 39 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-3">
+            <p className="text-amber-700 font-bold text-sm">Fever Worsening</p>
+            <p className="text-amber-600 text-xs mt-0.5">
               Temperature is trending upward. Monitor closely.
             </p>
           </div>
         )}
 
+        <SectionHeader label="Status" />
+        <StatusCard trend={trend} unit={temperaturePreference} />
+
+        <SectionHeader label="Temperature" />
         <TemperatureEntry
           childId={selectedChildId}
           onAddTemperature={handleAddTemperature}
         />
+        <TemperatureGraph readings={temperatures} unit={temperaturePreference} />
 
-        <TemperatureGraph readings={childTemps} unit={temperaturePreference} />
+        <SectionHeader label="Medications" />
 
-        <MedicationEntry
-          childId={selectedChildId}
-          medications={activeMeds}
-          logsToday={logsToday}
-          onAddLog={handleAddMedicationLog}
-        />
-
-        {activeMeds.length === 0 && (
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
-            <p className="text-blue-700 font-bold mb-2">
-              ℹ️ No Active Medications
+        {activeMeds.length === 0 ? (
+          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
+            <p className="text-indigo-700 font-semibold text-sm mb-1">
+              No active medications
             </p>
-            <p className="text-sm text-blue-600 mb-3">
-              Add a medication to track dosages and set reminders.
+            <p className="text-indigo-500 text-xs mb-3">
+              Add a medication to track dosages.
             </p>
             <button
               onClick={() => setShowAddMedicationForm(true)}
-              className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors"
+              style={{ color: "#ffffff" }}
             >
               + Add First Medication
             </button>
           </div>
+        ) : (
+          <>
+            <MedicationEntry
+              childId={selectedChildId}
+              medications={activeMeds}
+              logsToday={logsToday}
+              onAddLog={handleAddMedicationLog}
+            />
+            <button
+              onClick={() => setShowAddMedicationForm(true)}
+              className="w-full border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-semibold py-2 px-4 rounded-lg text-sm mb-4 transition-colors"
+            >
+              + Add Another Medication
+            </button>
+          </>
         )}
 
-        {/* There is this missing section that claude can't seem to figure out. I need a button here!
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setShowAddMedicationForm(true)}
-            className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600"
-          >
-            + Add Another Medication
-          </button>
-        </div>
-        */}
-
+        <SectionHeader label="History" />
         <MedicationHistory
           logs={medicationLogs}
           medications={activeMeds}
           onDeleteLog={handleDeleteMedicationLog}
         />
-
-        {activeMeds.length > 0 && (
-          <button
-            onClick={() => setShowAddMedicationForm(true)}
-            className="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 mb-4"
-          >
-            + Add Another Medication
-          </button>
-        )}
       </div>
 
       {showAddMedicationForm && (
@@ -495,26 +460,21 @@ if (!currentChild) {
           childId={selectedChildId}
           onMedicationAdded={(newMed) => {
             if (!selectedChildId) return;
-
             setShowAddMedicationForm(false);
-
-            // Refresh medications from database
-            const medRes = fetch(
-              `/api/medications?childId=${selectedChildId}&isActive=true`
-            );
-            medRes
-              .then((res) => {
-                if (res.ok) {
-                  return res.json();
-                }
-              })
-              .then((medData) => {
-                if (medData) {
-                  setMedications(medData);
-                }
-              });
+            fetch(`/api/medications?childId=${selectedChildId}&isActive=true`)
+              .then((res) => (res.ok ? res.json() : null))
+              .then((data) => { if (data) setMedications(data); });
+            showToast("Medication added", "success");
           }}
           onClose={() => setShowAddMedicationForm(false)}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onDismiss={() => setToast(null)}
         />
       )}
     </main>
