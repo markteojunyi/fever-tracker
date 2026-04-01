@@ -9,6 +9,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    testTimeout: 20000, // allow time for MongoMemoryServer to start
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
