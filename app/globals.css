@@ -13,6 +13,14 @@ textarea {
   background-color: #ffffff;
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 a {
   color: #4f46e5;
 }

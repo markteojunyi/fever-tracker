@@ -74,6 +74,9 @@ export default function MedicationHistory({
                   {isClient ? formatDateTime(log.administeredAt) : "—"}
                 </p>
                 <p className="text-xs text-slate-400">by {log.administeredBy}</p>
+                {log.notes && (
+                  <p className="text-xs text-slate-400 italic mt-0.5">{log.notes}</p>
+                )}
               </div>
               <div className="flex items-center gap-3 ml-2">
                 <span className="text-sm font-bold text-slate-700">
@@ -99,7 +102,7 @@ export default function MedicationHistory({
                   <button
                     onClick={() => handleDeleteClick(log._id!)}
                     disabled={isDeleting}
-                    className="text-slate-300 hover:text-rose-500 transition-colors text-lg disabled:opacity-40"
+                    className="text-rose-400 hover:text-rose-600 transition-colors text-lg disabled:opacity-40"
                     title="Delete"
                   >
                     {isDeleting ? "…" : "🗑"}

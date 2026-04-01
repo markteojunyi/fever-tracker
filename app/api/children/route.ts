@@ -26,6 +26,37 @@ export async function GET() {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    await connectDB();
+    const id = request.nextUrl.searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+    const { name } = await request.json();
+    if (!name) return NextResponse.json({ error: "name required" }, { status: 400 });
+
+    const updated = await Child.findByIdAndUpdate(id, { name }, { new: true });
+    if (!updated) return NextResponse.json({ error: "Record not found" }, { status: 404 });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to rename record" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    await connectDB();
+    const id = request.nextUrl.searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+    await Child.findByIdAndDelete(id);
+    return NextResponse.json({ message: "Deleted" });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to delete record" }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();

@@ -61,7 +61,7 @@ export default function Home() {
   const [medications, setMedications] = useState<MedicationDefinition[]>([]);
   const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
 
-  const [temperaturePreference, setTemperaturePreference] = useState<"C" | "F">("C");
+  const [temperaturePreference] = useState<"C" | "F">("C");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -71,6 +71,7 @@ export default function Home() {
   const [newChildWeight, setNewChildWeight] = useState("");
   const [addingChild, setAddingChild] = useState(false);
   const [showAddMedicationForm, setShowAddMedicationForm] = useState(false);
+  const [justAddedChild, setJustAddedChild] = useState("");
 
   const [toast, setToast] = useState<{
     message: string;
@@ -164,6 +165,7 @@ export default function Home() {
       setNewChildName("");
       setNewChildDOB("");
       setNewChildWeight("");
+      setJustAddedChild(newChild.name);
       showToast("Child added successfully", "success");
     } catch (err) {
       showToast("Error adding child", "error");
@@ -210,6 +212,7 @@ export default function Home() {
           dosageAdministered: log.dosageAdministered,
           dosageUnit: log.dosageUnit,
           administeredBy: log.administeredBy,
+          notes: log.notes,
         }),
       });
 
@@ -220,6 +223,52 @@ export default function Home() {
       showToast("Medication logged", "success");
     } catch (err) {
       showToast("Error saving medication", "error");
+      console.error(err);
+    }
+  };
+
+  const handleDeleteRecord = async (id: string) => {
+    try {
+      const res = await fetch(`/api/children?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      const remaining = children.filter((c) => c._id !== id);
+      setChildren(remaining);
+      if (remaining.length > 0) {
+        setSelectedChildId(remaining[0]._id!);
+      } else {
+        setShowAddChildForm(true);
+      }
+      showToast("Illness record deleted", "success");
+    } catch (err) {
+      showToast("Error deleting record", "error");
+      console.error(err);
+    }
+  };
+
+  const handleRenameRecord = async (id: string, newName: string) => {
+    try {
+      const res = await fetch(`/api/children?id=${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName }),
+      });
+      if (!res.ok) throw new Error("Failed to rename");
+      setChildren(children.map((c) => (c._id === id ? { ...c, name: newName } : c)));
+      showToast("Record renamed", "success");
+    } catch (err) {
+      showToast("Error renaming record", "error");
+      console.error(err);
+    }
+  };
+
+  const handleDeleteTemperature = async (id: string) => {
+    try {
+      const res = await fetch(`/api/temperatures?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      setTemperatures(temperatures.filter((t) => t._id !== id));
+      showToast("Reading deleted", "success");
+    } catch (err) {
+      showToast("Error deleting reading", "error");
       console.error(err);
     }
   };
@@ -271,9 +320,12 @@ export default function Home() {
 
         <div className="max-w-2xl mx-auto p-4 mt-4">
           <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-            <h2 className="text-lg font-bold text-slate-800 mb-4">
-              Add Your Child
+            <h2 className="text-lg font-bold text-slate-800 mb-1">
+              New Illness Record
             </h2>
+            <p className="text-xs text-slate-400 mb-4">
+              e.g., "Emma - Flu Jan 2026"
+            </p>
 
             {error && (
               <div className="mb-4 px-3 py-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm">
@@ -284,13 +336,13 @@ export default function Home() {
             <form onSubmit={handleAddChild} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">
-                  Child&apos;s Name
+                  Record Name
                 </label>
                 <input
                   type="text"
                   value={newChildName}
                   onChange={(e) => setNewChildName(e.target.value)}
-                  placeholder="e.g., Emma"
+                  placeholder="e.g., Emma - Flu Jan 2026"
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   required
                 />
@@ -329,7 +381,7 @@ export default function Home() {
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm disabled:opacity-50 transition-colors"
                 style={{ color: "#ffffff" }}
               >
-                {addingChild ? "Adding..." : "Add Child"}
+                {addingChild ? "Creating..." : "Create Record"}
               </button>
             </form>
           </div>
@@ -359,18 +411,20 @@ export default function Home() {
     <main className="bg-slate-50 min-h-screen pb-12">
       <AppHeader onSignOut={handleSignOut} />
 
-      <div className="max-w-2xl mx-auto px-4 pt-4">
+      <div className="max-w-6xl mx-auto px-4 pt-4">
         {error && (
           <div className="mb-4 px-3 py-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm">
             {error}
           </div>
         )}
 
-        {/* Child selector + add child */}
+        {/* Child selector + add child — full width */}
         <div className="flex items-center gap-2 mb-2">
           <ChildSelector
             selectedChildId={selectedChildId}
             onSelectChild={setSelectedChildId}
+            onDeleteRecord={handleDeleteRecord}
+            onRenameRecord={handleRenameRecord}
           >
             {children}
           </ChildSelector>
@@ -378,11 +432,31 @@ export default function Home() {
             onClick={() => setShowAddChildForm(true)}
             className="shrink-0 text-xs text-indigo-600 border border-indigo-200 hover:bg-indigo-50 rounded-full px-3 py-1.5 font-medium transition-colors"
           >
-            + Add child
+            + New record
           </button>
         </div>
 
-        {/* Alerts */}
+        {/* Welcome banner — shown once after adding a child */}
+        {justAddedChild && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-3 flex justify-between items-start">
+            <div>
+              <p className="text-indigo-700 font-semibold text-sm">
+                {justAddedChild} has been added!
+              </p>
+              <p className="text-indigo-500 text-xs mt-0.5">
+                Start by logging a temperature reading below.
+              </p>
+            </div>
+            <button
+              onClick={() => setJustAddedChild("")}
+              className="text-indigo-300 hover:text-indigo-500 text-lg leading-none ml-4"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {/* Alerts — full width */}
         {trend.currentTemp > 39 && (
           <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-3">
             <p className="text-rose-700 font-bold text-sm">High Fever Alert</p>
@@ -402,63 +476,73 @@ export default function Home() {
           </div>
         )}
 
+        {/* Status card — full width */}
         <SectionHeader label="Status" />
         <StatusCard trend={trend} unit={temperaturePreference} />
 
-        <SectionHeader label="Temperature" />
-        <TemperatureEntry
-          childId={selectedChildId}
-          onAddTemperature={handleAddTemperature}
-        />
-        <TemperatureGraph readings={temperatures} unit={temperaturePreference} />
-
-        <SectionHeader label="Medications" />
-
-        {activeMeds.length === 0 ? (
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
-            <p className="text-indigo-700 font-semibold text-sm mb-1">
-              No active medications
-            </p>
-            <p className="text-indigo-500 text-xs mb-3">
-              Add a medication to track dosages.
-            </p>
-            <button
-              onClick={() => setShowAddMedicationForm(true)}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors"
-              style={{ color: "#ffffff" }}
-            >
-              + Add First Medication
-            </button>
-          </div>
-        ) : (
-          <>
-            <MedicationEntry
+        {/* Two-column grid on desktop */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+          {/* Left column: Temperature */}
+          <div>
+            <SectionHeader label="Temperature" />
+            <TemperatureEntry
               childId={selectedChildId}
-              medications={activeMeds}
-              logsToday={logsToday}
-              onAddLog={handleAddMedicationLog}
+              onAddTemperature={handleAddTemperature}
             />
-            <button
-              onClick={() => setShowAddMedicationForm(true)}
-              className="w-full border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-semibold py-2 px-4 rounded-lg text-sm mb-4 transition-colors"
-            >
-              + Add Another Medication
-            </button>
-          </>
-        )}
+            <TemperatureGraph readings={temperatures} unit={temperaturePreference} onDeleteReading={handleDeleteTemperature} />
+          </div>
 
-        <SectionHeader label="History" />
-        <MedicationHistory
-          logs={medicationLogs}
-          medications={activeMeds}
-          onDeleteLog={handleDeleteMedicationLog}
-        />
+          {/* Right column: Medications + History */}
+          <div>
+            <SectionHeader label="Medications" />
+
+            {activeMeds.length === 0 ? (
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
+                <p className="text-indigo-700 font-semibold text-sm mb-1">
+                  No active medications
+                </p>
+                <p className="text-indigo-500 text-xs mb-3">
+                  Add a medication to track dosages.
+                </p>
+                <button
+                  onClick={() => setShowAddMedicationForm(true)}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors"
+                  style={{ color: "#ffffff" }}
+                >
+                  + Add First Medication
+                </button>
+              </div>
+            ) : (
+              <>
+                <MedicationEntry
+                  childId={selectedChildId}
+                  medications={activeMeds}
+                  logsToday={logsToday}
+                  onAddLog={handleAddMedicationLog}
+                />
+                <button
+                  onClick={() => setShowAddMedicationForm(true)}
+                  className="w-full border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-semibold py-2 px-4 rounded-lg text-sm mb-4 transition-colors"
+                >
+                  + Add Another Medication
+                </button>
+              </>
+            )}
+
+            <SectionHeader label="History" />
+            <MedicationHistory
+              logs={medicationLogs}
+              medications={activeMeds}
+              onDeleteLog={handleDeleteMedicationLog}
+            />
+          </div>
+        </div>
       </div>
 
       {showAddMedicationForm && (
         <AddMedicationForm
           childId={selectedChildId}
-          onMedicationAdded={(newMed) => {
+          onMedicationAdded={(_newMed) => {
             if (!selectedChildId) return;
             setShowAddMedicationForm(false);
             fetch(`/api/medications?childId=${selectedChildId}&isActive=true`)

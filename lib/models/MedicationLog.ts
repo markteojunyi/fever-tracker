@@ -11,6 +11,7 @@ export interface IMedicationLog extends Document {
   dosageAdministered: number;
   dosageUnit: "pills" | "ml";
   administeredBy: string;
+  notes?: string;
   createdAt: Date;
 }
 
@@ -42,6 +43,10 @@ const MedicationLogSchema = new Schema<IMedicationLog>(
     administeredBy: {
       type: String,
       required: [true, "Please provide who administered"],
+      trim: true,
+    },
+    notes: {
+      type: String,
       trim: true,
     },
     createdAt: {

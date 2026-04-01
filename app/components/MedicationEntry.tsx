@@ -21,6 +21,7 @@ export default function MedicationEntry({
   const [selectedMedId, setSelectedMedId] = useState("");
   const [dosage, setDosage] = useState("");
   const [administeredBy, setAdministeredBy] = useState("");
+  const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const hasInitialized = useRef(false);
@@ -71,12 +72,14 @@ export default function MedicationEntry({
       dosageAdministered: parseFloat(dosage),
       dosageUnit: selectedMed.dosageUnit,
       administeredBy,
+      notes: notes || undefined,
       createdAt: new Date().toISOString(),
     };
 
     onAddLog(newLog);
     setDosage("");
     setAdministeredBy("");
+    setNotes("");
     setIsSubmitting(false);
   };
 
@@ -165,6 +168,19 @@ export default function MedicationEntry({
             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
+      </div>
+
+      <div className="mb-3">
+        <label className="block text-xs font-semibold text-slate-500 mb-1">
+          Notes (optional)
+        </label>
+        <input
+          type="text"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="e.g., given with food, child was sleeping"
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
       </div>
 
       <button

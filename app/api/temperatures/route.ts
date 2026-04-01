@@ -29,6 +29,25 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    await connectDB();
+    const id = request.nextUrl.searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "id required" }, { status: 400 });
+    }
+
+    await TemperatureReading.findByIdAndDelete(id);
+    return NextResponse.json({ message: "Deleted" });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete temperature reading" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();

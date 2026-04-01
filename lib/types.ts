@@ -42,6 +42,7 @@ export interface MedicationLog {
   dosageAdministered: number;
   dosageUnit: "pills" | "ml";
   administeredBy: string;
+  notes?: string;
   createdAt: string;
 }
 

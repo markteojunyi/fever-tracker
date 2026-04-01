@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       dosageAdministered: body.dosageAdministered,
       dosageUnit: body.dosageUnit,
       administeredBy: body.administeredBy,
+      notes: body.notes || undefined,
     });
 
     return NextResponse.json(log, { status: 201 });
