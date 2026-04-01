@@ -1,71 +1,37 @@
-// ============================================
-// FILE: app/api/temperatures/route.ts
-// GET temps for a child, POST new temperature
-// ============================================
-
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
+import { withHandler } from "@/lib/api/withHandler";
 import TemperatureReading from "@/lib/models/TemperatureReading";
 
-export async function GET(request: NextRequest) {
-  try {
-    await connectDB();
-    const childId = request.nextUrl.searchParams.get("childId");
+export const GET = withHandler(async (req: NextRequest) => {
+  const childId = req.nextUrl.searchParams.get("childId");
+  if (!childId)
+    return NextResponse.json({ error: "childId required" }, { status: 400 });
 
-    if (!childId) {
-      return NextResponse.json({ error: "childId required" }, { status: 400 });
-    }
+  const readings = await TemperatureReading.find({ childId }).sort({
+    timestamp: 1,
+  });
+  return NextResponse.json(readings);
+});
 
-    const readings = await TemperatureReading.find({ childId }).sort({
-      timestamp: 1,
-    });
+export const POST = withHandler(async (req: NextRequest) => {
+  const body = await req.json();
 
-    return NextResponse.json(readings);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch temperatures" },
-      { status: 500 }
-    );
-  }
-}
+  const reading = await TemperatureReading.create({
+    childId: body.childId,
+    temperature: body.temperature,
+    temperatureUnit: body.temperatureUnit,
+    timestamp: body.timestamp,
+    notes: body.notes,
+  });
 
-export async function DELETE(request: NextRequest) {
-  try {
-    await connectDB();
-    const id = request.nextUrl.searchParams.get("id");
+  return NextResponse.json(reading, { status: 201 });
+});
 
-    if (!id) {
-      return NextResponse.json({ error: "id required" }, { status: 400 });
-    }
+export const DELETE = withHandler(async (req: NextRequest) => {
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id)
+    return NextResponse.json({ error: "id required" }, { status: 400 });
 
-    await TemperatureReading.findByIdAndDelete(id);
-    return NextResponse.json({ message: "Deleted" });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to delete temperature reading" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    await connectDB();
-    const body = await request.json();
-
-    const reading = await TemperatureReading.create({
-      childId: body.childId,
-      temperature: body.temperature,
-      temperatureUnit: body.temperatureUnit,
-      timestamp: body.timestamp,
-      notes: body.notes,
-    });
-
-    return NextResponse.json(reading, { status: 201 });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to create temperature reading" },
-      { status: 500 }
-    );
-  }
-}
+  await TemperatureReading.findByIdAndDelete(id);
+  return NextResponse.json({ message: "Deleted" });
+});

@@ -2,6 +2,21 @@
 
 import { signOut } from "next-auth/react";
 import { useState, useEffect, useCallback } from "react";
+import * as feverApi from "@/lib/services/feverApi";
+import { calculateTrend } from "@/lib/utils";
+import type {
+  Child,
+  TemperatureReading,
+  MedicationDefinition,
+  MedicationLog,
+  Observation,
+} from "@/lib/types";
+
+// Components
+import AppHeader from "./components/AppHeader";
+import SectionHeader from "./components/SectionHeader";
+import FeverAlerts from "./components/FeverAlerts";
+import NewRecordForm from "./components/NewRecordForm";
 import ChildSelector from "./components/ChildSelector";
 import StatusCard from "./components/StatusCard";
 import TemperatureEntry from "./components/TemperatureEntry";
@@ -11,70 +26,20 @@ import MedicationHistory from "./components/MedicationHistory";
 import AddMedicationForm from "./components/AddMedicationForm";
 import ObservationLog from "./components/ObservationLog";
 import Toast from "./components/Toast";
-import {
-  Child,
-  TemperatureReading,
-  MedicationDefinition,
-  MedicationLog,
-  Observation,
-} from "@/lib/types";
-import { calculateTrend } from "@/lib/utils";
-
-function SectionHeader({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-3 mb-3 mt-6">
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-        {label}
-      </span>
-      <div className="flex-1 h-px bg-slate-200" />
-    </div>
-  );
-}
-
-function AppHeader({ onSignOut }: { onSignOut: () => void }) {
-  return (
-    <header className="bg-slate-800 sticky top-0 z-40 shadow-md">
-      <div className="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: "#ffffff" }}>
-            🌡️ Fever Tracker
-          </h1>
-          <p className="text-xs" style={{ color: "#94a3b8" }}>
-            Temperature & medication log
-          </p>
-        </div>
-        <button
-          onClick={onSignOut}
-          className="text-sm border border-slate-600 rounded-lg px-3 py-1.5 transition-colors hover:border-slate-400"
-          style={{ color: "#cbd5e1" }}
-        >
-          Sign out
-        </button>
-      </div>
-    </header>
-  );
-}
 
 export default function Home() {
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChildId, setSelectedChildId] = useState("");
-
   const [temperatures, setTemperatures] = useState<TemperatureReading[]>([]);
   const [medications, setMedications] = useState<MedicationDefinition[]>([]);
   const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
-
   const [observations, setObservations] = useState<Observation[]>([]);
 
   const [temperaturePreference] = useState<"C" | "F">("C");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const [showAddChildForm, setShowAddChildForm] = useState(false);
-  const [newChildName, setNewChildName] = useState("");
-  const [newChildDOB, setNewChildDOB] = useState("");
-  const [newChildWeight, setNewChildWeight] = useState("");
-  const [addingChild, setAddingChild] = useState(false);
   const [showAddMedicationForm, setShowAddMedicationForm] = useState(false);
+  const [showAddChildForm, setShowAddChildForm] = useState(false);
   const [justAddedChild, setJustAddedChild] = useState("");
 
   const [toast, setToast] = useState<{
@@ -86,158 +51,81 @@ export default function Home() {
     setToast({ message, type });
   }, []);
 
-  const handleSignOut = () => signOut({ callbackUrl: "/login" });
+  // ─── Template Method: common try/toast/catch skeleton ────────────────────
+  const executeAction = useCallback(
+    async (
+      action: () => Promise<void>,
+      successMsg: string,
+      errorMsg: string
+    ) => {
+      try {
+        await action();
+        showToast(successMsg, "success");
+      } catch (err) {
+        showToast(errorMsg, "error");
+        console.error(err);
+      }
+    },
+    [showToast]
+  );
 
+  // ─── Bootstrap ───────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchChildren();
+    const bootstrap = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const childData = await feverApi.getChildren();
+        setChildren(childData);
+        if (childData.length > 0) {
+          const firstId = childData[0]._id!;
+          setSelectedChildId(firstId);
+          await loadChildData(firstId);
+        } else {
+          setShowAddChildForm(true);
+        }
+      } catch {
+        setError("Error loading data. Make sure MongoDB is connected.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    bootstrap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchChildren = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const childRes = await fetch("/api/children");
-      if (!childRes.ok) throw new Error("Failed to fetch children");
-      const childData = await childRes.json();
-      setChildren(childData);
-
-      if (childData.length > 0) {
-        const firstChildId = childData[0]._id;
-        setSelectedChildId(firstChildId);
-        await fetchChildData(firstChildId);
-      } else {
-        setShowAddChildForm(true);
-      }
-    } catch (err) {
-      setError("Error loading data. Make sure MongoDB is connected.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchChildData = async (childId: string) => {
-    try {
-      if (!childId) return;
-
-      const tempRes = await fetch(`/api/temperatures?childId=${childId}`);
-      if (tempRes.ok) setTemperatures(await tempRes.json());
-
-      const medRes = await fetch(`/api/medications?childId=${childId}&isActive=true`);
-      if (medRes.ok) setMedications(await medRes.json());
-
-      const logsRes = await fetch(`/api/medication-logs?childId=${childId}`);
-      if (logsRes.ok) setMedicationLogs(await logsRes.json());
-
-      const obsRes = await fetch(`/api/observations?childId=${childId}`);
-      if (obsRes.ok) setObservations(await obsRes.json());
-    } catch (err) {
-      console.error("Error fetching child data:", err);
-    }
+  const loadChildData = async (childId: string) => {
+    const [temps, meds, logs, obs] = await Promise.allSettled([
+      feverApi.getTemperatures(childId),
+      feverApi.getMedications(childId),
+      feverApi.getMedicationLogs(childId),
+      feverApi.getObservations(childId),
+    ]);
+    if (temps.status === "fulfilled") setTemperatures(temps.value);
+    if (meds.status === "fulfilled") setMedications(meds.value);
+    if (logs.status === "fulfilled") setMedicationLogs(logs.value);
+    if (obs.status === "fulfilled") setObservations(obs.value);
   };
 
   useEffect(() => {
     if (!selectedChildId) return;
-    fetchChildData(selectedChildId);
+    loadChildData(selectedChildId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChildId]);
 
-  const handleAddChild = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ─── Handlers (Facade + Template Method) ─────────────────────────────────
 
-    if (!newChildName || !newChildDOB) {
-      showToast("Please fill in name and date of birth", "error");
-      return;
-    }
-
-    setAddingChild(true);
-
-    try {
-      const res = await fetch("/api/children", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newChildName,
-          dateOfBirth: newChildDOB,
-          weight: newChildWeight ? parseFloat(newChildWeight) : undefined,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to add child");
-
-      const newChild = await res.json();
-      setChildren([...children, newChild]);
-      setSelectedChildId(newChild._id);
-      setShowAddChildForm(false);
-      setNewChildName("");
-      setNewChildDOB("");
-      setNewChildWeight("");
-      setJustAddedChild(newChild.name);
-      showToast("Child added successfully", "success");
-    } catch (err) {
-      showToast("Error adding child", "error");
-      console.error(err);
-    } finally {
-      setAddingChild(false);
-    }
+  const handleChildAdded = (newChild: Child) => {
+    setChildren((prev) => [...prev, newChild]);
+    setSelectedChildId(newChild._id!);
+    setShowAddChildForm(false);
+    setJustAddedChild(newChild.name);
+    showToast("Record created", "success");
   };
 
-  const handleAddTemperature = async (reading: Omit<TemperatureReading, "_id">) => {
-    try {
-      const res = await fetch("/api/temperatures", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          childId: selectedChildId,
-          temperature: reading.temperature,
-          temperatureUnit: reading.temperatureUnit,
-          timestamp: reading.timestamp,
-          notes: reading.notes,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to save temperature");
-
-      const newReading = await res.json();
-      setTemperatures([...temperatures, newReading]);
-      showToast("Temperature logged", "success");
-    } catch (err) {
-      showToast("Error saving temperature", "error");
-      console.error(err);
-    }
-  };
-
-  const handleAddMedicationLog = async (log: Omit<MedicationLog, "_id">) => {
-    try {
-      const res = await fetch("/api/medication-logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          medicationDefinitionId: log.medicationDefinitionId,
-          childId: selectedChildId,
-          administeredAt: log.administeredAt,
-          dosageAdministered: log.dosageAdministered,
-          dosageUnit: log.dosageUnit,
-          administeredBy: log.administeredBy,
-          notes: log.notes,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to save medication log");
-
-      const newLog = await res.json();
-      setMedicationLogs([...medicationLogs, newLog]);
-      showToast("Medication logged", "success");
-    } catch (err) {
-      showToast("Error saving medication", "error");
-      console.error(err);
-    }
-  };
-
-  const handleDeleteRecord = async (id: string) => {
-    try {
-      const res = await fetch(`/api/children?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete");
+  const handleDeleteRecord = (id: string) =>
+    executeAction(async () => {
+      await feverApi.deleteChild(id);
       const remaining = children.filter((c) => c._id !== id);
       setChildren(remaining);
       if (remaining.length > 0) {
@@ -245,99 +133,73 @@ export default function Home() {
       } else {
         setShowAddChildForm(true);
       }
-      showToast("Illness record deleted", "success");
-    } catch (err) {
-      showToast("Error deleting record", "error");
-      console.error(err);
-    }
-  };
+    }, "Illness record deleted", "Error deleting record");
 
-  const handleRenameRecord = async (id: string, newName: string) => {
-    try {
-      const res = await fetch(`/api/children?id=${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName }),
+  const handleRenameRecord = (id: string, newName: string) =>
+    executeAction(async () => {
+      await feverApi.renameChild(id, newName);
+      setChildren((prev) =>
+        prev.map((c) => (c._id === id ? { ...c, name: newName } : c))
+      );
+    }, "Record renamed", "Error renaming record");
+
+  const handleAddTemperature = (reading: Omit<TemperatureReading, "_id">) =>
+    executeAction(async () => {
+      const newReading = await feverApi.addTemperature({
+        ...reading,
+        childId: selectedChildId,
       });
-      if (!res.ok) throw new Error("Failed to rename");
-      setChildren(children.map((c) => (c._id === id ? { ...c, name: newName } : c)));
-      showToast("Record renamed", "success");
-    } catch (err) {
-      showToast("Error renaming record", "error");
-      console.error(err);
-    }
-  };
+      setTemperatures((prev) => [...prev, newReading]);
+    }, "Temperature logged", "Error saving temperature");
 
-  const handleDeleteTemperature = async (id: string) => {
-    try {
-      const res = await fetch(`/api/temperatures?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete");
-      setTemperatures(temperatures.filter((t) => t._id !== id));
-      showToast("Reading deleted", "success");
-    } catch (err) {
-      showToast("Error deleting reading", "error");
-      console.error(err);
-    }
-  };
+  const handleDeleteTemperature = (id: string) =>
+    executeAction(async () => {
+      await feverApi.deleteTemperature(id);
+      setTemperatures((prev) => prev.filter((t) => t._id !== id));
+    }, "Reading deleted", "Error deleting reading");
 
-  const handleAddObservation = async (content: string) => {
-    try {
-      const res = await fetch("/api/observations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ childId: selectedChildId, content }),
+  const handleAddMedicationLog = (log: Omit<MedicationLog, "_id">) =>
+    executeAction(async () => {
+      const newLog = await feverApi.addMedicationLog({
+        ...log,
+        childId: selectedChildId,
       });
-      if (!res.ok) throw new Error("Failed to save observation");
-      const newObs = await res.json();
+      setMedicationLogs((prev) => [...prev, newLog]);
+    }, "Medication logged", "Error saving medication");
+
+  const handleDeleteMedicationLog = (id: string) =>
+    executeAction(async () => {
+      await feverApi.deleteMedicationLog(id);
+      setMedicationLogs((prev) => prev.filter((l) => l._id !== id));
+    }, "Medication log deleted", "Error deleting medication log");
+
+  const handleAddObservation = (content: string) =>
+    executeAction(async () => {
+      const newObs = await feverApi.addObservation(selectedChildId, content);
       setObservations((prev) => [newObs, ...prev]);
-      showToast("Observation logged", "success");
-    } catch (err) {
-      showToast("Error saving observation", "error");
-      console.error(err);
-    }
-  };
+    }, "Observation logged", "Error saving observation");
 
-  const handleDeleteObservation = async (id: string) => {
-    try {
-      const res = await fetch(`/api/observations?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete observation");
+  const handleDeleteObservation = (id: string) =>
+    executeAction(async () => {
+      await feverApi.deleteObservation(id);
       setObservations((prev) => prev.filter((o) => o._id !== id));
-      showToast("Observation deleted", "success");
-    } catch (err) {
-      showToast("Error deleting observation", "error");
-      console.error(err);
-    }
-  };
+    }, "Observation deleted", "Error deleting observation");
 
-  const handleDeleteMedicationLog = async (logId: string) => {
-    try {
-      const res = await fetch(`/api/medication-logs?id=${logId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Failed to delete log");
-
-      setMedicationLogs(medicationLogs.filter((log) => log._id !== logId));
-      showToast("Medication log deleted", "success");
-    } catch (err) {
-      showToast("Error deleting medication log", "error");
-      console.error(err);
-    }
-  };
-
+  // ─── Derived state ────────────────────────────────────────────────────────
   const currentChild = children.find((c) => c._id === selectedChildId);
-  const activeMeds = medications;
+  const trend = calculateTrend(temperatures);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const logsToday = medicationLogs.filter((log) => {
-    const logDate = new Date(log.administeredAt);
-    logDate.setHours(0, 0, 0, 0);
-    return logDate.getTime() === today.getTime();
+    const d = new Date(log.administeredAt);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime() === today.getTime();
   });
 
-  const trend = calculateTrend(temperatures);
+  const handleSignOut = () => signOut({ callbackUrl: "/login" });
 
+  // ─── Render guards ────────────────────────────────────────────────────────
   if (loading) {
     return (
       <main className="bg-slate-50 min-h-screen">
@@ -351,86 +213,11 @@ export default function Home() {
 
   if (children.length === 0 || showAddChildForm) {
     return (
-      <main className="bg-slate-50 min-h-screen pb-8">
-        <AppHeader onSignOut={handleSignOut} />
-
-        <div className="max-w-2xl mx-auto p-4 mt-4">
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-            <h2 className="text-lg font-bold text-slate-800 mb-1">
-              New Illness Record
-            </h2>
-            <p className="text-xs text-slate-400 mb-4">
-              e.g., "Emma - Flu Jan 2026"
-            </p>
-
-            {error && (
-              <div className="mb-4 px-3 py-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleAddChild} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">
-                  Record Name
-                </label>
-                <input
-                  type="text"
-                  value={newChildName}
-                  onChange={(e) => setNewChildName(e.target.value)}
-                  placeholder="e.g., Emma - Flu Jan 2026"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  value={newChildDOB}
-                  onChange={(e) => setNewChildDOB(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">
-                  Weight (kg) — optional
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={newChildWeight}
-                  onChange={(e) => setNewChildWeight(e.target.value)}
-                  placeholder="e.g., 18"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={addingChild}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm disabled:opacity-50 transition-colors"
-                style={{ color: "#ffffff" }}
-              >
-                {addingChild ? "Creating..." : "Create Record"}
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onDismiss={() => setToast(null)}
-          />
-        )}
-      </main>
+      <NewRecordForm
+        onChildAdded={handleChildAdded}
+        onSignOut={handleSignOut}
+        dbError={error}
+      />
     );
   }
 
@@ -443,6 +230,7 @@ export default function Home() {
     );
   }
 
+  // ─── Main dashboard ───────────────────────────────────────────────────────
   return (
     <main className="bg-slate-50 min-h-screen pb-12">
       <AppHeader onSignOut={handleSignOut} />
@@ -454,7 +242,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Child selector + add child — full width */}
+        {/* Record selector */}
         <div className="flex items-center gap-2 mb-2">
           <ChildSelector
             selectedChildId={selectedChildId}
@@ -472,7 +260,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Welcome banner — shown once after adding a child */}
+        {/* Welcome banner */}
         {justAddedChild && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-3 flex justify-between items-start">
             <div>
@@ -492,47 +280,31 @@ export default function Home() {
           </div>
         )}
 
-        {/* Alerts — full width */}
-        {trend.currentTemp > 39 && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-3">
-            <p className="text-rose-700 font-bold text-sm">High Fever Alert</p>
-            <p className="text-rose-600 text-xs mt-0.5">
-              Temperature is {trend.currentTemp.toFixed(1)}°
-              {temperaturePreference}. Consider contacting a doctor.
-            </p>
-          </div>
-        )}
+        <FeverAlerts trend={trend} unit={temperaturePreference} />
 
-        {trend.trend === "worsening" && trend.currentTemp <= 39 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-3">
-            <p className="text-amber-700 font-bold text-sm">Fever Worsening</p>
-            <p className="text-amber-600 text-xs mt-0.5">
-              Temperature is trending upward. Monitor closely.
-            </p>
-          </div>
-        )}
-
-        {/* Status card — full width */}
         <SectionHeader label="Status" />
         <StatusCard trend={trend} unit={temperaturePreference} />
 
         {/* Two-column grid on desktop */}
         <div className="lg:grid lg:grid-cols-2 lg:gap-6">
-          {/* Left column: Temperature */}
+          {/* Left: Temperature */}
           <div>
             <SectionHeader label="Temperature" />
             <TemperatureEntry
               childId={selectedChildId}
               onAddTemperature={handleAddTemperature}
             />
-            <TemperatureGraph readings={temperatures} unit={temperaturePreference} onDeleteReading={handleDeleteTemperature} />
+            <TemperatureGraph
+              readings={temperatures}
+              unit={temperaturePreference}
+              onDeleteReading={handleDeleteTemperature}
+            />
           </div>
 
-          {/* Right column: Medications + History */}
+          {/* Right: Medications */}
           <div>
             <SectionHeader label="Medications" />
-
-            {activeMeds.length === 0 ? (
+            {medications.length === 0 ? (
               <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
                 <p className="text-indigo-700 font-semibold text-sm mb-1">
                   No active medications
@@ -552,7 +324,7 @@ export default function Home() {
               <>
                 <MedicationEntry
                   childId={selectedChildId}
-                  medications={activeMeds}
+                  medications={medications}
                   logsToday={logsToday}
                   onAddLog={handleAddMedicationLog}
                 />
@@ -568,13 +340,13 @@ export default function Home() {
             <SectionHeader label="History" />
             <MedicationHistory
               logs={medicationLogs}
-              medications={activeMeds}
+              medications={medications}
               onDeleteLog={handleDeleteMedicationLog}
             />
           </div>
         </div>
 
-        {/* Observations — full width below the two columns */}
+        {/* Observations */}
         <SectionHeader label="Observations" />
         <ObservationLog
           observations={observations}
@@ -586,12 +358,12 @@ export default function Home() {
       {showAddMedicationForm && (
         <AddMedicationForm
           childId={selectedChildId}
-          onMedicationAdded={(_newMed) => {
-            if (!selectedChildId) return;
+          onMedicationAdded={() => {
             setShowAddMedicationForm(false);
-            fetch(`/api/medications?childId=${selectedChildId}&isActive=true`)
-              .then((res) => (res.ok ? res.json() : null))
-              .then((data) => { if (data) setMedications(data); });
+            feverApi
+              .getMedications(selectedChildId)
+              .then(setMedications)
+              .catch(console.error);
             showToast("Medication added", "success");
           }}
           onClose={() => setShowAddMedicationForm(false)}

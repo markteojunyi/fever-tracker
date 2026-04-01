@@ -1,58 +1,55 @@
-// ============================================
-// FILE: lib/mongodb.ts
-// MongoDB connection with Mongoose
-// ============================================
+// ─── Singleton Pattern ────────────────────────────────────────────────────────
+// Before: ad-hoc singleton using raw `global.mongoose` object with manual
+//         null-checks scattered through the connect function.
+// After:  explicit Singleton class — private constructor prevents external
+//         instantiation; static getInstance() is the sole access point.
+//         We still store the instance on `global` so Next.js hot-reload in dev
+//         doesn't create a second connection (module cache is wiped on reload,
+//         but `global` survives).
+// ─────────────────────────────────────────────────────────────────────────────
 
 import mongoose from "mongoose";
 
-// Define the type for our global mongoose cache
-interface MongooseCache {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-}
-
-// Extend the global namespace
 declare global {
-  var mongoose: MongooseCache | undefined;
+  // eslint-disable-next-line no-var
+  var __dbInstance: DatabaseConnection | undefined;
 }
 
-const MONGODB_URI = process.env.MONGODB_URI;
+class DatabaseConnection {
+  private conn: typeof mongoose | null = null;
+  private promise: Promise<typeof mongoose> | null = null;
 
-if (!MONGODB_URI) {
-  throw new Error("Please define MONGODB_URI in .env.local");
-}
+  // Private constructor — no one outside this class can call `new DatabaseConnection()`
+  private constructor(private readonly uri: string) {}
 
-// Initialize global mongoose cache if it doesn't exist
-if (!global.mongoose) {
-  global.mongoose = { conn: null, promise: null };
-}
-
-// Cache connection to prevent multiple connections
-const cached = global.mongoose;
-
-async function connectDB() {
-  if (cached.conn) {
-    return cached.conn;
+  static getInstance(): DatabaseConnection {
+    if (!global.__dbInstance) {
+      const uri = process.env.MONGODB_URI;
+      if (!uri) throw new Error("Please define MONGODB_URI in .env.local");
+      global.__dbInstance = new DatabaseConnection(uri);
+    }
+    return global.__dbInstance;
   }
 
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
+  async connect(): Promise<typeof mongoose> {
+    if (this.conn) return this.conn;
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      return mongoose;
-    });
+    if (!this.promise) {
+      this.promise = mongoose.connect(this.uri, { bufferCommands: false });
+    }
+
+    try {
+      this.conn = await this.promise;
+    } catch (e) {
+      this.promise = null; // allow retry on next call
+      throw e;
+    }
+
+    return this.conn;
   }
-
-  try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    throw e;
-  }
-
-  return cached.conn;
 }
 
-export default connectDB;
+// Export a simple function so call-sites don't change: `await connectDB()`
+export default function connectDB() {
+  return DatabaseConnection.getInstance().connect();
+}

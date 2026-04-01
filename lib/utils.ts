@@ -1,10 +1,58 @@
+// ─── Strategy Pattern ─────────────────────────────────────────────────────────
+// Before: calculateTrend contained a single hardcoded algorithm — compare the
+//         first reading against the most recent one, with a fixed ±0.3° delta
+//         threshold. There was no way to swap the algorithm without editing this
+//         file.
+// After:  a TrendStrategy interface defines the contract. FirstLastDeltaStrategy
+//         encapsulates the original algorithm. calculateTrend accepts any
+//         TrendStrategy, defaulting to FirstLastDeltaStrategy. A new algorithm
+//         (e.g. rolling-average-based) can be introduced by implementing the
+//         interface and passing it in — callers and this file stay untouched.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { TemperatureReading, TemperatureTrend } from "./types";
 
-/**
- * Calculate temperature trend from readings
- */
+// ── Strategy interface ────────────────────────────────────────────────────────
+export interface TrendStrategy {
+  evaluate(sorted: TemperatureReading[]): {
+    trend: "improving" | "worsening" | "stable";
+    trendDirection: "up" | "down" | "flat";
+  };
+}
+
+// ── Concrete strategy: compare first reading against most recent ──────────────
+export class FirstLastDeltaStrategy implements TrendStrategy {
+  constructor(private readonly threshold = 0.3) {}
+
+  evaluate(sorted: TemperatureReading[]): {
+    trend: "improving" | "worsening" | "stable";
+    trendDirection: "up" | "down" | "flat";
+  } {
+    const first = sorted[0].temperature;
+    const current = sorted[sorted.length - 1].temperature;
+
+    let trendDirection: "up" | "down" | "flat" = "flat";
+    if (current > first + this.threshold) trendDirection = "up";
+    if (current < first - this.threshold) trendDirection = "down";
+
+    const trend: "improving" | "worsening" | "stable" =
+      trendDirection === "down"
+        ? "improving"
+        : trendDirection === "up"
+          ? "worsening"
+          : "stable";
+
+    return { trend, trendDirection };
+  }
+}
+
+// Shared default — avoids allocating a new instance on every calculateTrend call
+const defaultStrategy = new FirstLastDeltaStrategy();
+
+// ── Public API ────────────────────────────────────────────────────────────────
 export function calculateTrend(
-  readings: TemperatureReading[]
+  readings: TemperatureReading[],
+  strategy: TrendStrategy = defaultStrategy
 ): TemperatureTrend {
   if (readings.length === 0) {
     return {
@@ -19,32 +67,19 @@ export function calculateTrend(
   }
 
   const sorted = [...readings].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    (a, b) =>
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
   const currentTemp = sorted[sorted.length - 1].temperature;
   const peakTemp = Math.max(...sorted.map((r) => r.temperature));
   const lowestTemp = Math.min(...sorted.map((r) => r.temperature));
 
-  // Determine trend: compare last reading with first reading
-  const firstTemp = sorted[0].temperature;
-  let trendDirection: "up" | "down" | "flat" = "flat";
-  if (currentTemp > firstTemp + 0.3) trendDirection = "up";
-  if (currentTemp < firstTemp - 0.3) trendDirection = "down";
+  const { trend, trendDirection } = strategy.evaluate(sorted);
 
-  const trend =
-    trendDirection === "down"
-      ? "improving"
-      : trendDirection === "up"
-        ? "worsening"
-        : "stable";
-
-  // Average temp last 24h
-  const last24h = sorted.filter((r) => {
-    const age = Date.now() - new Date(r.timestamp).getTime();
-    return age <= 24 * 60 * 60 * 1000;
-  });
-
+  const last24h = sorted.filter(
+    (r) => Date.now() - new Date(r.timestamp).getTime() <= 24 * 60 * 60 * 1000
+  );
   const avgTempLast24h =
     last24h.length > 0
       ? last24h.reduce((sum, r) => sum + r.temperature, 0) / last24h.length
