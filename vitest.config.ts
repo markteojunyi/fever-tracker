@@ -3,7 +3,6 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     // Native tsconfig path resolution — replaces vite-tsconfig-paths plugin
-    // @ts-expect-error -- vitest extends vite config which supports this option
     tsconfigPaths: true,
   },
   test: {
