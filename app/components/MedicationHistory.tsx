@@ -53,7 +53,7 @@ export default function MedicationHistory({
       <h3 className="text-sm font-semibold text-slate-700 mb-3">
         Recent Medication Doses
       </h3>
-      <div className="space-y-2">
+      <div className="space-y-2 max-h-64 overflow-y-auto">
         {sortedLogs.map((log) => {
           const med = medications.find(
             (m) => m._id === log.medicationDefinitionId

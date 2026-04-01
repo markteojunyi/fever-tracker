@@ -46,6 +46,14 @@ export interface MedicationLog {
   createdAt: string;
 }
 
+export interface Observation {
+  _id?: string;
+  childId: string;
+  content: string;
+  observedAt: string;
+  createdAt: string;
+}
+
 export interface TemperatureTrend {
   currentTemp: number;
   peakTemp: number;

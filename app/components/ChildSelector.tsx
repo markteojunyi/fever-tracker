@@ -29,7 +29,10 @@ export default function ChildSelector({
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(e.target as Node)
+      ) {
         setPopoverOpen(false);
         setConfirmingDelete(false);
       }
@@ -72,9 +75,16 @@ export default function ChildSelector({
       {children.map((child) => {
         const isSelected = child._id === selectedChildId;
         return (
-          <div key={child._id} className="relative" ref={isSelected ? popoverRef : undefined}>
+          <div
+            key={child._id}
+            className="relative"
+            ref={isSelected ? popoverRef : undefined}
+          >
             {isSelected && renaming ? (
-              <form onSubmit={handleRenameSubmit} className="flex items-center gap-1">
+              <form
+                onSubmit={handleRenameSubmit}
+                className="flex items-center gap-1"
+              >
                 <input
                   ref={renameInputRef}
                   value={renameValue}
@@ -82,7 +92,10 @@ export default function ChildSelector({
                   className="px-3 py-1 text-sm border border-indigo-400 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400 w-40"
                   onBlur={() => setRenaming(false)}
                 />
-                <button type="submit" className="text-xs text-indigo-600 font-semibold px-2">
+                <button
+                  type="submit"
+                  className="text-xs text-indigo-600 font-semibold px-2"
+                >
                   Save
                 </button>
               </form>
@@ -118,7 +131,9 @@ export default function ChildSelector({
               <div className="absolute top-full left-0 mt-1.5 z-50 bg-white rounded-xl border border-slate-200 shadow-lg py-1 min-w-36">
                 {confirmingDelete ? (
                   <div className="px-3 py-2">
-                    <p className="text-xs text-slate-600 mb-2 font-medium">Delete this record?</p>
+                    <p className="text-xs text-slate-600 mb-2 font-medium">
+                      Delete this record?
+                    </p>
                     <div className="flex gap-1">
                       <button
                         onClick={handleConfirmDelete}
@@ -138,16 +153,16 @@ export default function ChildSelector({
                 ) : (
                   <>
                     <button
-                      onClick={handleRenameClick}
-                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                    >
-                      Rename
-                    </button>
-                    <button
                       onClick={() => setConfirmingDelete(true)}
                       className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
                     >
                       Delete record
+                    </button>
+                    <button
+                      onClick={handleRenameClick}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      Rename
                     </button>
                   </>
                 )}

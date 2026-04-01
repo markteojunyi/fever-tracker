@@ -9,12 +9,14 @@ import TemperatureGraph from "./components/TemperatureGraph";
 import MedicationEntry from "./components/MedicationEntry";
 import MedicationHistory from "./components/MedicationHistory";
 import AddMedicationForm from "./components/AddMedicationForm";
+import ObservationLog from "./components/ObservationLog";
 import Toast from "./components/Toast";
 import {
   Child,
   TemperatureReading,
   MedicationDefinition,
   MedicationLog,
+  Observation,
 } from "@/lib/types";
 import { calculateTrend } from "@/lib/utils";
 
@@ -60,6 +62,8 @@ export default function Home() {
   const [temperatures, setTemperatures] = useState<TemperatureReading[]>([]);
   const [medications, setMedications] = useState<MedicationDefinition[]>([]);
   const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
+
+  const [observations, setObservations] = useState<Observation[]>([]);
 
   const [temperaturePreference] = useState<"C" | "F">("C");
   const [loading, setLoading] = useState(true);
@@ -125,6 +129,9 @@ export default function Home() {
 
       const logsRes = await fetch(`/api/medication-logs?childId=${childId}`);
       if (logsRes.ok) setMedicationLogs(await logsRes.json());
+
+      const obsRes = await fetch(`/api/observations?childId=${childId}`);
+      if (obsRes.ok) setObservations(await obsRes.json());
     } catch (err) {
       console.error("Error fetching child data:", err);
     }
@@ -269,6 +276,35 @@ export default function Home() {
       showToast("Reading deleted", "success");
     } catch (err) {
       showToast("Error deleting reading", "error");
+      console.error(err);
+    }
+  };
+
+  const handleAddObservation = async (content: string) => {
+    try {
+      const res = await fetch("/api/observations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ childId: selectedChildId, content }),
+      });
+      if (!res.ok) throw new Error("Failed to save observation");
+      const newObs = await res.json();
+      setObservations((prev) => [newObs, ...prev]);
+      showToast("Observation logged", "success");
+    } catch (err) {
+      showToast("Error saving observation", "error");
+      console.error(err);
+    }
+  };
+
+  const handleDeleteObservation = async (id: string) => {
+    try {
+      const res = await fetch(`/api/observations?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete observation");
+      setObservations((prev) => prev.filter((o) => o._id !== id));
+      showToast("Observation deleted", "success");
+    } catch (err) {
+      showToast("Error deleting observation", "error");
       console.error(err);
     }
   };
@@ -537,6 +573,14 @@ export default function Home() {
             />
           </div>
         </div>
+
+        {/* Observations — full width below the two columns */}
+        <SectionHeader label="Observations" />
+        <ObservationLog
+          observations={observations}
+          onAdd={handleAddObservation}
+          onDelete={handleDeleteObservation}
+        />
       </div>
 
       {showAddMedicationForm && (
