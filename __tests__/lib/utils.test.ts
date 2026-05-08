@@ -51,7 +51,7 @@ describe("calculateTrend", () => {
     const readings = [
       makeReading(37.5, 60), // oldest
       makeReading(38.2, 30),
-      makeReading(39.1, 5),  // most recent
+      makeReading(39.1, 5), // most recent
     ];
     const result = calculateTrend(readings);
     expect(result.currentTemp).toBe(39.1);
@@ -71,7 +71,7 @@ describe("calculateTrend", () => {
   it("sorts readings by timestamp before calculating", () => {
     // Pass readings in reverse chronological order
     const readings = [
-      makeReading(39.0, 5),   // most recent but passed first
+      makeReading(39.0, 5), // most recent but passed first
       makeReading(37.0, 120), // oldest but passed last
     ];
     const result = calculateTrend(readings);
@@ -79,19 +79,13 @@ describe("calculateTrend", () => {
   });
 
   it("trend is 'worsening' when temp rises more than 0.3°", () => {
-    const readings = [
-      makeReading(37.0, 60),
-      makeReading(37.5, 10),
-    ];
+    const readings = [makeReading(37.0, 60), makeReading(37.5, 10)];
     expect(calculateTrend(readings).trend).toBe("worsening");
     expect(calculateTrend(readings).trendDirection).toBe("up");
   });
 
   it("trend is 'improving' when temp drops more than 0.3°", () => {
-    const readings = [
-      makeReading(39.0, 60),
-      makeReading(38.5, 10),
-    ];
+    const readings = [makeReading(39.0, 60), makeReading(38.5, 10)];
     expect(calculateTrend(readings).trend).toBe("improving");
     expect(calculateTrend(readings).trendDirection).toBe("down");
   });
@@ -108,18 +102,15 @@ describe("calculateTrend", () => {
   it("calculates avgTempLast24h only from readings within 24 hours", () => {
     const readings = [
       makeReading(40.0, 25 * 60), // 25 hours ago — excluded
-      makeReading(38.0, 60),       // 1 hour ago — included
-      makeReading(39.0, 30),       // 30 min ago — included
+      makeReading(38.0, 60), // 1 hour ago — included
+      makeReading(39.0, 30), // 30 min ago — included
     ];
     const result = calculateTrend(readings);
     expect(result.avgTempLast24h).toBeCloseTo((38.0 + 39.0) / 2, 5);
   });
 
   it("avgTempLast24h is 0 when all readings are older than 24 hours", () => {
-    const readings = [
-      makeReading(38.5, 25 * 60),
-      makeReading(39.0, 26 * 60),
-    ];
+    const readings = [makeReading(38.5, 25 * 60), makeReading(39.0, 26 * 60)];
     expect(calculateTrend(readings).avgTempLast24h).toBe(0);
   });
 
@@ -190,7 +181,7 @@ describe("checkOverdoseRisk", () => {
   });
 
   it("returns 'warning' between 75% and 99%", () => {
-    expect(checkOverdoseRisk(3, 4)).toBe("warning");  // 75%
+    expect(checkOverdoseRisk(3, 4)).toBe("warning"); // 75%
     expect(checkOverdoseRisk(80, 100)).toBe("warning"); // 80%
     expect(checkOverdoseRisk(99, 100)).toBe("warning"); // 99%
   });

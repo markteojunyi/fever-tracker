@@ -50,7 +50,9 @@ export default function LoginPage() {
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-8 w-full max-w-sm">
-          <h2 className="text-xl font-bold text-slate-800 mb-1">Welcome back</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-1">
+            Welcome back
+          </h2>
           <p className="text-sm text-slate-400 mb-6">Sign in to your account</p>
 
           {error && (
@@ -103,7 +105,10 @@ export default function LoginPage() {
 
           <p className="text-center text-slate-400 text-xs mt-6">
             Don&apos;t have an account?{" "}
-            <a href="/register" className="text-indigo-600 hover:text-indigo-800 font-medium">
+            <a
+              href="/register"
+              className="text-indigo-600 hover:text-indigo-800 font-medium"
+            >
               Register here
             </a>
           </p>

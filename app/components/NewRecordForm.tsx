@@ -12,17 +12,27 @@ interface Props {
   dbError?: string;
 }
 
-export default function NewRecordForm({ onChildAdded, onSignOut, dbError }: Props) {
+export default function NewRecordForm({
+  onChildAdded,
+  onSignOut,
+  dbError,
+}: Props) {
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const [weight, setWeight] = useState("");
   const [adding, setAdding] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !dob) {
-      setToast({ message: "Please fill in name and date of birth", type: "error" });
+      setToast({
+        message: "Please fill in name and date of birth",
+        type: "error",
+      });
       return;
     }
     setAdding(true);
@@ -114,7 +124,11 @@ export default function NewRecordForm({ onChildAdded, onSignOut, dbError }: Prop
       </div>
 
       {toast && (
-        <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onDismiss={() => setToast(null)}
+        />
       )}
     </main>
   );

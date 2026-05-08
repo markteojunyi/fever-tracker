@@ -23,7 +23,10 @@ export const POST = withHandler(async (req: NextRequest) => {
 
   const med = await MedicationDefinition.findById(body.medicationDefinitionId);
   if (!med)
-    return NextResponse.json({ error: "Medication not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Medication not found" },
+      { status: 404 }
+    );
 
   const startDate = new Date(med.startDate);
   const endDate = med.endDate
@@ -43,5 +46,8 @@ export const POST = withHandler(async (req: NextRequest) => {
   }
 
   await MedicationReminder.insertMany(reminders);
-  return NextResponse.json({ success: true, count: reminders.length }, { status: 201 });
+  return NextResponse.json(
+    { success: true, count: reminders.length },
+    { status: 201 }
+  );
 });

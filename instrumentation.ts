@@ -1,7 +1,9 @@
 export const onRequestError = async (
   err: Parameters<typeof import("@sentry/nextjs").captureRequestError>[0],
   request: Parameters<typeof import("@sentry/nextjs").captureRequestError>[1],
-  errorContext: Parameters<typeof import("@sentry/nextjs").captureRequestError>[2]
+  errorContext: Parameters<
+    typeof import("@sentry/nextjs").captureRequestError
+  >[2]
 ) => {
   const { captureRequestError } = await import("@sentry/nextjs");
   captureRequestError(err, request, errorContext);

@@ -35,7 +35,8 @@ export default function MedicationHistory({
 
   const sortedLogs = [...logs].sort(
     (a, b) =>
-      new Date(b.administeredAt).getTime() - new Date(a.administeredAt).getTime()
+      new Date(b.administeredAt).getTime() -
+      new Date(a.administeredAt).getTime()
   );
 
   const handleDeleteClick = (logId: string) => {
@@ -73,9 +74,13 @@ export default function MedicationHistory({
                 <p className="text-xs text-slate-500 mt-0.5">
                   {isClient ? formatDateTime(log.administeredAt) : "—"}
                 </p>
-                <p className="text-xs text-slate-400">by {log.administeredBy}</p>
+                <p className="text-xs text-slate-400">
+                  by {log.administeredBy}
+                </p>
                 {log.notes && (
-                  <p className="text-xs text-slate-400 italic mt-0.5">{log.notes}</p>
+                  <p className="text-xs text-slate-400 italic mt-0.5">
+                    {log.notes}
+                  </p>
                 )}
               </div>
               <div className="flex items-center gap-3 ml-2">

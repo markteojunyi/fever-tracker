@@ -3,9 +3,10 @@ import { NextResponse } from "next/server";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isAuthPage = req.nextUrl.pathname.startsWith("/login") || 
-                     req.nextUrl.pathname.startsWith("/register") ||
-                     req.nextUrl.pathname.startsWith("/forgot-password");
+  const isAuthPage =
+    req.nextUrl.pathname.startsWith("/login") ||
+    req.nextUrl.pathname.startsWith("/register") ||
+    req.nextUrl.pathname.startsWith("/forgot-password");
 
   // If user is logged in and tries to access auth pages, redirect to home
   if (isLoggedIn && isAuthPage) {

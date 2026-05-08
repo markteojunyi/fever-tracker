@@ -29,8 +29,7 @@ export default function StatusCard({ trend, unit }: StatusCardProps) {
         ? "↑"
         : "→";
 
-  const trendLabel =
-    trend.trend.charAt(0).toUpperCase() + trend.trend.slice(1);
+  const trendLabel = trend.trend.charAt(0).toUpperCase() + trend.trend.slice(1);
 
   return (
     <div className={`border rounded-xl p-5 mb-4 ${cardBg}`}>

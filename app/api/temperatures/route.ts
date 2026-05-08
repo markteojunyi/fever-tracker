@@ -29,8 +29,7 @@ export const POST = withHandler(async (req: NextRequest) => {
 
 export const DELETE = withHandler(async (req: NextRequest) => {
   const id = req.nextUrl.searchParams.get("id");
-  if (!id)
-    return NextResponse.json({ error: "id required" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   await TemperatureReading.findByIdAndDelete(id);
   return NextResponse.json({ message: "Deleted" });

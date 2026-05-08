@@ -27,7 +27,11 @@ export default function MedicationEntry({
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (!hasInitialized.current && medications.length > 0 && medications[0]._id) {
+    if (
+      !hasInitialized.current &&
+      medications.length > 0 &&
+      medications[0]._id
+    ) {
       setSelectedMedId(medications[0]._id);
       hasInitialized.current = true;
       return;
@@ -133,10 +137,14 @@ export default function MedicationEntry({
               {logsForMedToday.length}/{selectedMed.maxDosesPerDay}
             </strong>
             {overdoseRisk === "dangerous" && (
-              <span className="ml-1 text-rose-600 font-bold">— MAX REACHED</span>
+              <span className="ml-1 text-rose-600 font-bold">
+                — MAX REACHED
+              </span>
             )}
             {overdoseRisk === "warning" && (
-              <span className="ml-1 text-amber-600 font-bold">— Near limit</span>
+              <span className="ml-1 text-amber-600 font-bold">
+                — Near limit
+              </span>
             )}
           </span>
         </div>

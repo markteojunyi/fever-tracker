@@ -124,7 +124,9 @@ export default function AddMedicationForm({
               <label className={labelClass}>Unit</label>
               <select
                 value={dosageUnit}
-                onChange={(e) => setDosageUnit(e.target.value as "pills" | "ml")}
+                onChange={(e) =>
+                  setDosageUnit(e.target.value as "pills" | "ml")
+                }
                 className={inputClass}
               >
                 <option value="pills">pills</option>

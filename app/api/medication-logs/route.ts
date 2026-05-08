@@ -11,7 +11,8 @@ export const GET = withHandler(async (req: NextRequest) => {
 
   const query: { childId?: string; medicationDefinitionId?: string } = {};
   if (childId) query.childId = childId;
-  if (medicationDefinitionId) query.medicationDefinitionId = medicationDefinitionId;
+  if (medicationDefinitionId)
+    query.medicationDefinitionId = medicationDefinitionId;
 
   let logs = await MedicationLog.find(query).sort({ administeredAt: -1 });
 

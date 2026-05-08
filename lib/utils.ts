@@ -67,8 +67,7 @@ export function calculateTrend(
   }
 
   const sorted = [...readings].sort(
-    (a, b) =>
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
   const currentTemp = sorted[sorted.length - 1].temperature;

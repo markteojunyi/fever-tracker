@@ -21,8 +21,7 @@ export const POST = withHandler(async (req: NextRequest) => {
 
 export const PATCH = withHandler(async (req: NextRequest) => {
   const id = req.nextUrl.searchParams.get("id");
-  if (!id)
-    return NextResponse.json({ error: "id required" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const { name } = await req.json();
   if (!name)
@@ -37,8 +36,7 @@ export const PATCH = withHandler(async (req: NextRequest) => {
 
 export const DELETE = withHandler(async (req: NextRequest) => {
   const id = req.nextUrl.searchParams.get("id");
-  if (!id)
-    return NextResponse.json({ error: "id required" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   await Child.findByIdAndDelete(id);
   return NextResponse.json({ message: "Deleted" });

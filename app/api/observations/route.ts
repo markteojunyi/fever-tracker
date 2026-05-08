@@ -9,8 +9,7 @@ export const GET = withHandler(async (req: NextRequest) => {
     return NextResponse.json({ error: "childId required" }, { status: 400 });
 
   const child = await Child.findById(childId);
-  if (!child)
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!child) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const observations = await Observation.find({ childId }).sort({
     observedAt: -1,
@@ -28,8 +27,7 @@ export const POST = withHandler(async (req: NextRequest) => {
     );
 
   const child = await Child.findById(childId);
-  if (!child)
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!child) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const observation = await Observation.create({
     childId,
@@ -42,8 +40,7 @@ export const POST = withHandler(async (req: NextRequest) => {
 
 export const DELETE = withHandler(async (req: NextRequest) => {
   const id = req.nextUrl.searchParams.get("id");
-  if (!id)
-    return NextResponse.json({ error: "id required" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const deleted = await Observation.findByIdAndDelete(id);
   if (!deleted)

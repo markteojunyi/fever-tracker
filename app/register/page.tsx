@@ -64,8 +64,12 @@ export default function RegisterPage() {
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-8 w-full max-w-sm">
-          <h2 className="text-xl font-bold text-slate-800 mb-1">Create account</h2>
-          <p className="text-sm text-slate-400 mb-6">Start tracking your child&apos;s health</p>
+          <h2 className="text-xl font-bold text-slate-800 mb-1">
+            Create account
+          </h2>
+          <p className="text-sm text-slate-400 mb-6">
+            Start tracking your child&apos;s health
+          </p>
 
           {error && (
             <div className="mb-4 px-3 py-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm">
@@ -130,7 +134,10 @@ export default function RegisterPage() {
 
           <p className="text-center text-slate-400 text-xs mt-6">
             Already have an account?{" "}
-            <a href="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">
+            <a
+              href="/login"
+              className="text-indigo-600 hover:text-indigo-800 font-medium"
+            >
               Sign in
             </a>
           </p>

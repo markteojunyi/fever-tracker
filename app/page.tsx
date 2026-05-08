@@ -47,9 +47,12 @@ export default function Home() {
     type: "success" | "error";
   } | null>(null);
 
-  const showToast = useCallback((message: string, type: "success" | "error") => {
-    setToast({ message, type });
-  }, []);
+  const showToast = useCallback(
+    (message: string, type: "success" | "error") => {
+      setToast({ message, type });
+    },
+    []
+  );
 
   // ─── Template Method: common try/toast/catch skeleton ────────────────────
   const executeAction = useCallback(
@@ -91,7 +94,6 @@ export default function Home() {
       }
     };
     bootstrap();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadChildData = async (childId: string) => {
@@ -110,7 +112,6 @@ export default function Home() {
   useEffect(() => {
     if (!selectedChildId) return;
     loadChildData(selectedChildId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChildId]);
 
   // ─── Handlers (Facade + Template Method) ─────────────────────────────────
@@ -124,66 +125,98 @@ export default function Home() {
   };
 
   const handleDeleteRecord = (id: string) =>
-    executeAction(async () => {
-      await feverApi.deleteChild(id);
-      const remaining = children.filter((c) => c._id !== id);
-      setChildren(remaining);
-      if (remaining.length > 0) {
-        setSelectedChildId(remaining[0]._id!);
-      } else {
-        setShowAddChildForm(true);
-      }
-    }, "Illness record deleted", "Error deleting record");
+    executeAction(
+      async () => {
+        await feverApi.deleteChild(id);
+        const remaining = children.filter((c) => c._id !== id);
+        setChildren(remaining);
+        if (remaining.length > 0) {
+          setSelectedChildId(remaining[0]._id!);
+        } else {
+          setShowAddChildForm(true);
+        }
+      },
+      "Illness record deleted",
+      "Error deleting record"
+    );
 
   const handleRenameRecord = (id: string, newName: string) =>
-    executeAction(async () => {
-      await feverApi.renameChild(id, newName);
-      setChildren((prev) =>
-        prev.map((c) => (c._id === id ? { ...c, name: newName } : c))
-      );
-    }, "Record renamed", "Error renaming record");
+    executeAction(
+      async () => {
+        await feverApi.renameChild(id, newName);
+        setChildren((prev) =>
+          prev.map((c) => (c._id === id ? { ...c, name: newName } : c))
+        );
+      },
+      "Record renamed",
+      "Error renaming record"
+    );
 
   const handleAddTemperature = (reading: Omit<TemperatureReading, "_id">) =>
-    executeAction(async () => {
-      const newReading = await feverApi.addTemperature({
-        ...reading,
-        childId: selectedChildId,
-      });
-      setTemperatures((prev) => [...prev, newReading]);
-    }, "Temperature logged", "Error saving temperature");
+    executeAction(
+      async () => {
+        const newReading = await feverApi.addTemperature({
+          ...reading,
+          childId: selectedChildId,
+        });
+        setTemperatures((prev) => [...prev, newReading]);
+      },
+      "Temperature logged",
+      "Error saving temperature"
+    );
 
   const handleDeleteTemperature = (id: string) =>
-    executeAction(async () => {
-      await feverApi.deleteTemperature(id);
-      setTemperatures((prev) => prev.filter((t) => t._id !== id));
-    }, "Reading deleted", "Error deleting reading");
+    executeAction(
+      async () => {
+        await feverApi.deleteTemperature(id);
+        setTemperatures((prev) => prev.filter((t) => t._id !== id));
+      },
+      "Reading deleted",
+      "Error deleting reading"
+    );
 
   const handleAddMedicationLog = (log: Omit<MedicationLog, "_id">) =>
-    executeAction(async () => {
-      const newLog = await feverApi.addMedicationLog({
-        ...log,
-        childId: selectedChildId,
-      });
-      setMedicationLogs((prev) => [...prev, newLog]);
-    }, "Medication logged", "Error saving medication");
+    executeAction(
+      async () => {
+        const newLog = await feverApi.addMedicationLog({
+          ...log,
+          childId: selectedChildId,
+        });
+        setMedicationLogs((prev) => [...prev, newLog]);
+      },
+      "Medication logged",
+      "Error saving medication"
+    );
 
   const handleDeleteMedicationLog = (id: string) =>
-    executeAction(async () => {
-      await feverApi.deleteMedicationLog(id);
-      setMedicationLogs((prev) => prev.filter((l) => l._id !== id));
-    }, "Medication log deleted", "Error deleting medication log");
+    executeAction(
+      async () => {
+        await feverApi.deleteMedicationLog(id);
+        setMedicationLogs((prev) => prev.filter((l) => l._id !== id));
+      },
+      "Medication log deleted",
+      "Error deleting medication log"
+    );
 
   const handleAddObservation = (content: string) =>
-    executeAction(async () => {
-      const newObs = await feverApi.addObservation(selectedChildId, content);
-      setObservations((prev) => [newObs, ...prev]);
-    }, "Observation logged", "Error saving observation");
+    executeAction(
+      async () => {
+        const newObs = await feverApi.addObservation(selectedChildId, content);
+        setObservations((prev) => [newObs, ...prev]);
+      },
+      "Observation logged",
+      "Error saving observation"
+    );
 
   const handleDeleteObservation = (id: string) =>
-    executeAction(async () => {
-      await feverApi.deleteObservation(id);
-      setObservations((prev) => prev.filter((o) => o._id !== id));
-    }, "Observation deleted", "Error deleting observation");
+    executeAction(
+      async () => {
+        await feverApi.deleteObservation(id);
+        setObservations((prev) => prev.filter((o) => o._id !== id));
+      },
+      "Observation deleted",
+      "Error deleting observation"
+    );
 
   // ─── Derived state ────────────────────────────────────────────────────────
   const currentChild = children.find((c) => c._id === selectedChildId);

@@ -24,8 +24,7 @@ const json = (body: unknown) => ({
 
 // ─── Children ────────────────────────────────────────────────────────────────
 
-export const getChildren = (): Promise<Child[]> =>
-  apiFetch("/api/children");
+export const getChildren = (): Promise<Child[]> => apiFetch("/api/children");
 
 export const addChild = (data: {
   name: string;
@@ -45,7 +44,9 @@ export const deleteChild = (id: string): Promise<void> =>
 
 // ─── Temperatures ─────────────────────────────────────────────────────────────
 
-export const getTemperatures = (childId: string): Promise<TemperatureReading[]> =>
+export const getTemperatures = (
+  childId: string
+): Promise<TemperatureReading[]> =>
   apiFetch(`/api/temperatures?childId=${childId}`);
 
 export const addTemperature = (
@@ -57,7 +58,9 @@ export const deleteTemperature = (id: string): Promise<void> =>
 
 // ─── Medications ─────────────────────────────────────────────────────────────
 
-export const getMedications = (childId: string): Promise<MedicationDefinition[]> =>
+export const getMedications = (
+  childId: string
+): Promise<MedicationDefinition[]> =>
   apiFetch(`/api/medications?childId=${childId}&isActive=true`);
 
 export const getMedicationLogs = (childId: string): Promise<MedicationLog[]> =>
@@ -78,7 +81,8 @@ export const getObservations = (childId: string): Promise<Observation[]> =>
 export const addObservation = (
   childId: string,
   content: string
-): Promise<Observation> => apiFetch("/api/observations", json({ childId, content }));
+): Promise<Observation> =>
+  apiFetch("/api/observations", json({ childId, content }));
 
 export const deleteObservation = (id: string): Promise<void> =>
   apiFetch(`/api/observations?id=${id}`, { method: "DELETE" });
