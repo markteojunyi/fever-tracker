@@ -1,9 +1,26 @@
-import { vi, describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from "vitest";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 
 // connectDB is a no-op — mongoose is connected directly via MongoMemoryServer
-vi.mock("@/lib/mongodb", () => ({ default: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/lib/mongodb", () => ({
+  default: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Authenticated routes — provide a session so withHandler doesn't 401.
+vi.mock("@/auth", () => ({
+  auth: vi.fn().mockResolvedValue({
+    user: { id: "test-user-id", email: "test@example.com" },
+  }),
+}));
 
 import { GET, POST, PATCH, DELETE } from "@/app/api/children/route";
 import Child from "@/lib/models/Child";
@@ -11,9 +28,15 @@ import { startTestDB, stopTestDB, clearTestDB } from "@/tests/helpers/db";
 import { get, post, patch, del } from "@/tests/helpers/request";
 
 let mongod: MongoMemoryServer;
-beforeAll(async () => { mongod = await startTestDB(); });
-afterAll(async () => { await stopTestDB(mongod); });
-beforeEach(async () => { await clearTestDB(); });
+beforeAll(async () => {
+  mongod = await startTestDB();
+});
+afterAll(async () => {
+  await stopTestDB(mongod);
+});
+beforeEach(async () => {
+  await clearTestDB();
+});
 
 // ─── GET /api/children ────────────────────────────────────────────────────────
 
@@ -48,7 +71,9 @@ describe("GET /api/children", () => {
 
 describe("POST /api/children", () => {
   it("creates a child and returns 201", async () => {
-    const res = await POST(post("/api/children", { name: "Emma", dateOfBirth: "2019-03-10" }));
+    const res = await POST(
+      post("/api/children", { name: "Emma", dateOfBirth: "2019-03-10" })
+    );
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.name).toBe("Emma");
@@ -56,13 +81,21 @@ describe("POST /api/children", () => {
   });
 
   it("persists the record to the database", async () => {
-    await POST(post("/api/children", { name: "Liam", dateOfBirth: "2020-07-04" }));
+    await POST(
+      post("/api/children", { name: "Liam", dateOfBirth: "2020-07-04" })
+    );
     const found = await Child.findOne({ name: "Liam" });
     expect(found).not.toBeNull();
   });
 
   it("stores optional weight when provided", async () => {
-    const res = await POST(post("/api/children", { name: "Noah", dateOfBirth: "2021-01-01", weight: 12.5 }));
+    const res = await POST(
+      post("/api/children", {
+        name: "Noah",
+        dateOfBirth: "2021-01-01",
+        weight: 12.5,
+      })
+    );
     const body = await res.json();
     expect(body.weight).toBe(12.5);
   });
@@ -77,14 +110,22 @@ describe("POST /api/children", () => {
 
 describe("PATCH /api/children", () => {
   it("renames a child and returns the updated record", async () => {
-    const child = await Child.create({ name: "Old Name", dateOfBirth: new Date("2020-01-01") });
-    const res = await PATCH(patch(`/api/children?id=${child._id}`, { name: "New Name" }));
+    const child = await Child.create({
+      name: "Old Name",
+      dateOfBirth: new Date("2020-01-01"),
+    });
+    const res = await PATCH(
+      patch(`/api/children?id=${child._id}`, { name: "New Name" })
+    );
     expect(res.status).toBe(200);
     expect((await res.json()).name).toBe("New Name");
   });
 
   it("persists the new name in the database", async () => {
-    const child = await Child.create({ name: "Before", dateOfBirth: new Date("2020-01-01") });
+    const child = await Child.create({
+      name: "Before",
+      dateOfBirth: new Date("2020-01-01"),
+    });
     await PATCH(patch(`/api/children?id=${child._id}`, { name: "After" }));
     const updated = await Child.findById(child._id);
     expect(updated?.name).toBe("After");
@@ -96,14 +137,19 @@ describe("PATCH /api/children", () => {
   });
 
   it("returns 400 when name is missing from body", async () => {
-    const child = await Child.create({ name: "Test", dateOfBirth: new Date("2020-01-01") });
+    const child = await Child.create({
+      name: "Test",
+      dateOfBirth: new Date("2020-01-01"),
+    });
     const res = await PATCH(patch(`/api/children?id=${child._id}`, {}));
     expect(res.status).toBe(400);
   });
 
   it("returns 404 for a non-existent id", async () => {
     const fakeId = new mongoose.Types.ObjectId();
-    const res = await PATCH(patch(`/api/children?id=${fakeId}`, { name: "Ghost" }));
+    const res = await PATCH(
+      patch(`/api/children?id=${fakeId}`, { name: "Ghost" })
+    );
     expect(res.status).toBe(404);
   });
 });
@@ -112,13 +158,19 @@ describe("PATCH /api/children", () => {
 
 describe("DELETE /api/children", () => {
   it("deletes a child and returns 200", async () => {
-    const child = await Child.create({ name: "Delete Me", dateOfBirth: new Date("2020-01-01") });
+    const child = await Child.create({
+      name: "Delete Me",
+      dateOfBirth: new Date("2020-01-01"),
+    });
     const res = await DELETE(del(`/api/children?id=${child._id}`));
     expect(res.status).toBe(200);
   });
 
   it("removes the record from the database", async () => {
-    const child = await Child.create({ name: "Gone", dateOfBirth: new Date("2020-01-01") });
+    const child = await Child.create({
+      name: "Gone",
+      dateOfBirth: new Date("2020-01-01"),
+    });
     await DELETE(del(`/api/children?id=${child._id}`));
     expect(await Child.findById(child._id)).toBeNull();
   });

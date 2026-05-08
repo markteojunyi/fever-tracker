@@ -6,8 +6,18 @@ vi.mock("@/lib/mongodb", () => ({
   default: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { withHandler } from "@/lib/api/withHandler";
+// Mock auth — default to a valid session so existing assertions still pass.
+// Individual tests can override via mockResolvedValueOnce(null) to test the
+// unauthenticated path.
+vi.mock("@/auth", () => ({
+  auth: vi.fn().mockResolvedValue({
+    user: { id: "test-user-id", email: "test@example.com" },
+  }),
+}));
+
+import { withHandler, withPublicHandler } from "@/lib/api/withHandler";
 import connectDB from "@/lib/mongodb";
+import { auth } from "@/auth";
 
 function makeRequest(path = "/api/test", method = "GET"): NextRequest {
   return new NextRequest(`http://localhost${path}`, { method });
@@ -16,6 +26,10 @@ function makeRequest(path = "/api/test", method = "GET"): NextRequest {
 describe("withHandler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset auth to default valid session after each clear
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { id: "test-user-id", email: "test@example.com" },
+    });
   });
 
   it("calls connectDB before the handler", async () => {
@@ -58,7 +72,9 @@ describe("withHandler", () => {
 
     expect(capturedReq).toBe(req);
     expect(
-      (capturedReq as unknown as NextRequest).nextUrl.searchParams.get("childId")
+      (capturedReq as unknown as NextRequest).nextUrl.searchParams.get(
+        "childId"
+      )
     ).toBe("abc");
   });
 
@@ -124,5 +140,79 @@ describe("withHandler", () => {
     const res = await handler(req);
     const body = await res.json();
     expect(body.received).toBe("Emma");
+  });
+
+  it("returns 401 when no session is present", async () => {
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+
+    const handler = withHandler(async () => NextResponse.json({ ok: true }));
+    const res = await handler(makeRequest());
+
+    expect(res.status).toBe(401);
+    expect((await res.json()).error).toBe("Unauthorized");
+  });
+
+  it("returns 401 when session exists but has no user.id", async () => {
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ user: {} });
+
+    const handler = withHandler(async () => NextResponse.json({ ok: true }));
+    const res = await handler(makeRequest());
+
+    expect(res.status).toBe(401);
+  });
+
+  it("does not call connectDB when unauthenticated", async () => {
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+
+    const handlerFn = vi.fn(async () => NextResponse.json({ ok: true }));
+    const handler = withHandler(handlerFn);
+
+    await handler(makeRequest());
+
+    expect(connectDB).not.toHaveBeenCalled();
+    expect(handlerFn).not.toHaveBeenCalled();
+  });
+});
+
+describe("withPublicHandler", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("does not check auth — runs even when no session is present", async () => {
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+
+    const handler = withPublicHandler(async () =>
+      NextResponse.json({ ok: true })
+    );
+
+    const res = await handler(makeRequest());
+    expect(res.status).toBe(200);
+    expect(auth).not.toHaveBeenCalled();
+  });
+
+  it("still calls connectDB before the handler", async () => {
+    const order: string[] = [];
+    (connectDB as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
+      order.push("connectDB");
+    });
+
+    const handler = withPublicHandler(async () => {
+      order.push("handler");
+      return NextResponse.json({ ok: true });
+    });
+
+    await handler(makeRequest());
+    expect(order).toEqual(["connectDB", "handler"]);
+  });
+
+  it("returns 500 when the handler throws", async () => {
+    const handler = withPublicHandler(async () => {
+      throw new Error("boom");
+    });
+
+    const res = await handler(makeRequest());
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe("boom");
   });
 });

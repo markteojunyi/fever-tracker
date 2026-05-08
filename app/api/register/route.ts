@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { withHandler } from "@/lib/api/withHandler";
+import { withPublicHandler } from "@/lib/api/withHandler";
 import User from "@/models/User";
 
-export const POST = withHandler(async (req: NextRequest) => {
+export const POST = withPublicHandler(async (req: NextRequest) => {
   const { name, email, password } = await req.json();
 
   if (!name || !email || !password)
@@ -33,7 +33,10 @@ export const POST = withHandler(async (req: NextRequest) => {
   });
 
   return NextResponse.json(
-    { message: "User created successfully", user: { id: user._id, name: user.name, email: user.email } },
+    {
+      message: "User created successfully",
+      user: { id: user._id, name: user.name, email: user.email },
+    },
     { status: 201 }
   );
 });

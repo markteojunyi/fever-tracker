@@ -1,35 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { withHandler } from "@/lib/api/withHandler";
-import User from "@/models/User";
+import { NextResponse } from "next/server";
 
-export const POST = withHandler(async (req: NextRequest) => {
-  const { email, newPassword } = await req.json();
-
-  if (!email || !newPassword)
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 }
-    );
-
-  if (newPassword.length < 6)
-    return NextResponse.json(
-      { error: "Password must be at least 6 characters" },
-      { status: 400 }
-    );
-
-  const user = await User.findOne({ email: email.toLowerCase() });
-  if (!user)
-    return NextResponse.json(
-      { error: "No account found with that email" },
-      { status: 404 }
-    );
-
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-  await User.updateOne(
-    { email: email.toLowerCase() },
-    { $set: { password: hashedPassword } }
+// Password reset will be rebuilt as a token-based flow in a future change.
+// Until then, the endpoint is intentionally disabled. To reset a password
+// in the meantime, update the user's bcrypt hash directly in MongoDB.
+export async function POST() {
+  return NextResponse.json(
+    { error: "Password reset is temporarily unavailable" },
+    { status: 503 }
   );
-
-  return NextResponse.json({ message: "Password updated successfully" });
-});
+}

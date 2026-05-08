@@ -1,47 +1,47 @@
 // ─── Decorator Pattern ────────────────────────────────────────────────────────
-// Before: every API route handler repeated the same skeleton:
+// withHandler:        wraps an authenticated route handler. Rejects unauthenticated
+//                     requests with 401 before connecting to the database.
+// withPublicHandler:  wraps a public route handler (e.g. /api/register). No auth
+//                     check; just connectDB + error formatting.
 //
-//   export async function GET(req) {
-//     try {
-//       await connectDB();
-//       // ...business logic...
-//     } catch (error) {
-//       return NextResponse.json({ error: "..." }, { status: 500 });
-//     }
-//   }
-//
-//   This boilerplate appeared in ~16 handler functions across 8 route files.
-//   Each route also had to know about connectDB and write its own catch block.
-//
-// After: withHandler wraps any route handler and adds the connect/catch
-//   behaviour around it — the "decoration". Route handlers now contain only
-//   their own business logic. connectDB and 500-error formatting live in one
-//   place.
-//
-//   Usage:
-//     export const GET = withHandler(async (req) => {
-//       // just the logic — no try/catch, no connectDB
-//     });
+// Both add the same connectDB + 500-error handling so route bodies stay terse.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 
 type RouteHandler = (req: NextRequest) => Promise<NextResponse>;
 
+function formatError(error: unknown, req: NextRequest): NextResponse {
+  const message =
+    error instanceof Error ? error.message : "Internal server error";
+  console.error(`[API Error] ${req.method} ${req.nextUrl.pathname}:`, error);
+  return NextResponse.json({ error: message }, { status: 500 });
+}
+
 export function withHandler(handler: RouteHandler): RouteHandler {
+  return async (req: NextRequest) => {
+    try {
+      const session = await auth();
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      await connectDB();
+      return await handler(req);
+    } catch (error) {
+      return formatError(error, req);
+    }
+  };
+}
+
+export function withPublicHandler(handler: RouteHandler): RouteHandler {
   return async (req: NextRequest) => {
     try {
       await connectDB();
       return await handler(req);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Internal server error";
-      console.error(
-        `[API Error] ${req.method} ${req.nextUrl.pathname}:`,
-        error
-      );
-      return NextResponse.json({ error: message }, { status: 500 });
+      return formatError(error, req);
     }
   };
 }
