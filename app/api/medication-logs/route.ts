@@ -1,18 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withHandler } from "@/lib/api/withHandler";
+import {
+  getOwnedChildIds,
+  isOwnershipError,
+  requireOwnedChild,
+} from "@/lib/api/ownership";
 import MedicationLog from "@/lib/models/MedicationLog";
+import MedicationDefinition from "@/lib/models/MedicationDefinition";
 
-export const GET = withHandler(async (req: NextRequest) => {
+export const GET = withHandler(async (req: NextRequest, userId: string) => {
   const childId = req.nextUrl.searchParams.get("childId");
   const medicationDefinitionId = req.nextUrl.searchParams.get(
     "medicationDefinitionId"
   );
   const date = req.nextUrl.searchParams.get("date"); // YYYY-MM-DD
 
-  const query: { childId?: string; medicationDefinitionId?: string } = {};
-  if (childId) query.childId = childId;
-  if (medicationDefinitionId)
+  const query: {
+    childId?: string | { $in: unknown[] };
+    medicationDefinitionId?: string;
+  } = {};
+  if (childId) {
+    const child = await requireOwnedChild(childId, userId);
+    if (isOwnershipError(child)) return child;
+
+    query.childId = childId;
+  } else {
+    query.childId = { $in: await getOwnedChildIds(userId) };
+  }
+  if (medicationDefinitionId) {
+    const medication = await MedicationDefinition.findOne({
+      _id: medicationDefinitionId,
+      childId: query.childId,
+    });
+
+    if (!medication)
+      return NextResponse.json(
+        { error: "Medication not found" },
+        { status: 404 }
+      );
+
     query.medicationDefinitionId = medicationDefinitionId;
+  }
 
   let logs = await MedicationLog.find(query).sort({ administeredAt: -1 });
 
@@ -29,8 +57,21 @@ export const GET = withHandler(async (req: NextRequest) => {
   return NextResponse.json(logs);
 });
 
-export const POST = withHandler(async (req: NextRequest) => {
+export const POST = withHandler(async (req: NextRequest, userId: string) => {
   const body = await req.json();
+  const child = await requireOwnedChild(body.childId, userId);
+  if (isOwnershipError(child)) return child;
+
+  const medication = await MedicationDefinition.findOne({
+    _id: body.medicationDefinitionId,
+    childId: body.childId,
+  });
+
+  if (!medication)
+    return NextResponse.json(
+      { error: "Medication not found" },
+      { status: 404 }
+    );
 
   const log = await MedicationLog.create({
     medicationDefinitionId: body.medicationDefinitionId,
@@ -45,14 +86,18 @@ export const POST = withHandler(async (req: NextRequest) => {
   return NextResponse.json(log, { status: 201 });
 });
 
-export const DELETE = withHandler(async (req: NextRequest) => {
+export const DELETE = withHandler(async (req: NextRequest, userId: string) => {
   const id = req.nextUrl.searchParams.get("id");
   if (!id)
     return NextResponse.json({ error: "Log ID is required" }, { status: 400 });
 
-  const deleted = await MedicationLog.findByIdAndDelete(id);
-  if (!deleted)
+  const log = await MedicationLog.findById(id);
+  if (!log)
     return NextResponse.json({ error: "Log not found" }, { status: 404 });
 
+  const child = await requireOwnedChild(log.childId?.toString(), userId);
+  if (isOwnershipError(child)) return child;
+
+  const deleted = await MedicationLog.findByIdAndDelete(id);
   return NextResponse.json({ message: "Log deleted successfully", deleted });
 });

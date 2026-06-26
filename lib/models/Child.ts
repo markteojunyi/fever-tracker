@@ -5,6 +5,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IChild extends Document {
+  userId: string;
   name: string;
   dateOfBirth: Date;
   weight?: number;
@@ -13,6 +14,11 @@ export interface IChild extends Document {
 
 const ChildSchema = new Schema<IChild>(
   {
+    userId: {
+      type: String,
+      required: [true, "Please provide userId"],
+      index: true,
+    },
     name: {
       type: String,
       required: [true, "Please provide a name"],
@@ -33,6 +39,8 @@ const ChildSchema = new Schema<IChild>(
   },
   { timestamps: true }
 );
+
+ChildSchema.index({ userId: 1, createdAt: -1 });
 
 export default mongoose.models.Child ||
   mongoose.model<IChild>("Child", ChildSchema);

@@ -1,14 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withHandler } from "@/lib/api/withHandler";
+import {
+  getOwnedChildIds,
+  isOwnershipError,
+  requireOwnedChild,
+} from "@/lib/api/ownership";
 import MedicationReminder from "@/lib/models/MedicationReminder";
 import MedicationDefinition from "@/lib/models/MedicationDefinition";
 
-export const GET = withHandler(async (req: NextRequest) => {
+export const GET = withHandler(async (req: NextRequest, userId: string) => {
   const childId = req.nextUrl.searchParams.get("childId");
   const isCompleted = req.nextUrl.searchParams.get("isCompleted");
 
-  const query: { childId?: string; isCompleted?: boolean } = {};
-  if (childId) query.childId = childId;
+  const query: {
+    childId?: string | { $in: unknown[] };
+    isCompleted?: boolean;
+  } = {};
+  if (childId) {
+    const child = await requireOwnedChild(childId, userId);
+    if (isOwnershipError(child)) return child;
+
+    query.childId = childId;
+  } else {
+    query.childId = { $in: await getOwnedChildIds(userId) };
+  }
   if (isCompleted === "true") query.isCompleted = true;
   if (isCompleted === "false") query.isCompleted = false;
 
@@ -18,7 +33,7 @@ export const GET = withHandler(async (req: NextRequest) => {
   return NextResponse.json(reminders);
 });
 
-export const POST = withHandler(async (req: NextRequest) => {
+export const POST = withHandler(async (req: NextRequest, userId: string) => {
   const body = await req.json();
 
   const med = await MedicationDefinition.findById(body.medicationDefinitionId);
@@ -27,6 +42,9 @@ export const POST = withHandler(async (req: NextRequest) => {
       { error: "Medication not found" },
       { status: 404 }
     );
+
+  const child = await requireOwnedChild(med.childId?.toString(), userId);
+  if (isOwnershipError(child)) return child;
 
   const startDate = new Date(med.startDate);
   const endDate = med.endDate

@@ -12,6 +12,10 @@ import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 
 type RouteHandler = (req: NextRequest) => Promise<NextResponse>;
+type AuthenticatedRouteHandler = (
+  req: NextRequest,
+  userId: string
+) => Promise<NextResponse>;
 
 function formatError(error: unknown, req: NextRequest): NextResponse {
   const message =
@@ -20,7 +24,7 @@ function formatError(error: unknown, req: NextRequest): NextResponse {
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
-export function withHandler(handler: RouteHandler): RouteHandler {
+export function withHandler(handler: AuthenticatedRouteHandler): RouteHandler {
   return async (req: NextRequest) => {
     try {
       const session = await auth();
@@ -28,7 +32,7 @@ export function withHandler(handler: RouteHandler): RouteHandler {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       await connectDB();
-      return await handler(req);
+      return await handler(req, session.user.id);
     } catch (error) {
       return formatError(error, req);
     }
