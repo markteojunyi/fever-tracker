@@ -91,6 +91,42 @@ export const POST = withHandler(async (req: NextRequest, userId: string) => {
   return NextResponse.json(log, { status: 201 });
 });
 
+export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id)
+    return NextResponse.json({ error: "Log ID is required" }, { status: 400 });
+
+  const log = await MedicationLog.findById(id);
+  if (!log)
+    return NextResponse.json({ error: "Log not found" }, { status: 404 });
+
+  const child = await requireOwnedChild(log.childId?.toString(), userId);
+  if (isOwnershipError(child)) return child;
+
+  const body = await req.json();
+  const update: {
+    administeredAt?: string;
+    dosageAdministered?: number;
+    dosageUnit?: "pills" | "ml";
+    administeredBy?: string;
+    notes?: string | undefined;
+  } = {};
+  if (body.administeredAt !== undefined)
+    update.administeredAt = body.administeredAt;
+  if (body.dosageAdministered !== undefined)
+    update.dosageAdministered = body.dosageAdministered;
+  if (body.dosageUnit !== undefined) update.dosageUnit = body.dosageUnit;
+  if (body.administeredBy !== undefined)
+    update.administeredBy = body.administeredBy;
+  if (body.notes !== undefined) update.notes = body.notes || undefined;
+
+  const updated = await MedicationLog.findByIdAndUpdate(id, update, {
+    new: true,
+    runValidators: true,
+  });
+  return NextResponse.json(updated);
+});
+
 export const DELETE = withHandler(async (req: NextRequest, userId: string) => {
   const id = req.nextUrl.searchParams.get("id");
   if (!id)

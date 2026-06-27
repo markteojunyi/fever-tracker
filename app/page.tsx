@@ -25,6 +25,10 @@ import MedicationEntry from "./components/MedicationEntry";
 import MedicationHistory from "./components/MedicationHistory";
 import AddMedicationForm from "./components/AddMedicationForm";
 import ObservationLog from "./components/ObservationLog";
+import EditRecordForm from "./components/EditRecordForm";
+import EditTemperatureForm from "./components/EditTemperatureForm";
+import EditMedicationLogForm from "./components/EditMedicationLogForm";
+import EditObservationForm from "./components/EditObservationForm";
 import Toast from "./components/Toast";
 
 export default function Home() {
@@ -41,6 +45,16 @@ export default function Home() {
   const [showAddMedicationForm, setShowAddMedicationForm] = useState(false);
   const [showAddChildForm, setShowAddChildForm] = useState(false);
   const [justAddedChild, setJustAddedChild] = useState("");
+
+  // ─── Edit modal targets (null = closed) ──────────────────────────────────
+  const [editingRecord, setEditingRecord] = useState<Child | null>(null);
+  const [editingReading, setEditingReading] =
+    useState<TemperatureReading | null>(null);
+  const [editingLog, setEditingLog] = useState<MedicationLog | null>(null);
+  const [editingObservation, setEditingObservation] =
+    useState<Observation | null>(null);
+  const [editingMedication, setEditingMedication] =
+    useState<MedicationDefinition | null>(null);
 
   const [toast, setToast] = useState<{
     message: string;
@@ -218,6 +232,72 @@ export default function Home() {
       "Error deleting observation"
     );
 
+  // ─── Edit handlers (rethrow so the modal can show its own error) ──────────
+
+  const handleUpdateRecord = async (data: {
+    name: string;
+    dateOfBirth: string;
+    weight?: number | null;
+  }) => {
+    const updated = await feverApi.updateChild(editingRecord!._id!, data);
+    setChildren((prev) =>
+      prev.map((c) => (c._id === updated._id ? updated : c))
+    );
+    showToast("Record updated", "success");
+  };
+
+  const handleUpdateReading = async (data: {
+    temperature: number;
+    temperatureUnit: "C" | "F";
+    timestamp: string;
+    notes?: string;
+  }) => {
+    const updated = await feverApi.updateTemperature(
+      editingReading!._id!,
+      data
+    );
+    setTemperatures((prev) =>
+      prev.map((t) => (t._id === updated._id ? updated : t))
+    );
+    showToast("Reading updated", "success");
+  };
+
+  const handleUpdateLog = async (data: {
+    administeredAt: string;
+    dosageAdministered: number;
+    dosageUnit: "pills" | "ml";
+    administeredBy: string;
+    notes?: string;
+  }) => {
+    const updated = await feverApi.updateMedicationLog(editingLog!._id!, data);
+    setMedicationLogs((prev) =>
+      prev.map((l) => (l._id === updated._id ? updated : l))
+    );
+    showToast("Medication dose updated", "success");
+  };
+
+  const handleUpdateObservation = async (data: {
+    content: string;
+    observedAt: string;
+  }) => {
+    const updated = await feverApi.updateObservation(
+      editingObservation!._id!,
+      data
+    );
+    setObservations((prev) =>
+      prev.map((o) => (o._id === updated._id ? updated : o))
+    );
+    showToast("Observation updated", "success");
+  };
+
+  const handleMedicationSaved = (saved: MedicationDefinition) => {
+    setEditingMedication(null);
+    setMedications((prev) =>
+      prev.map((m) => (m._id === saved._id ? saved : m))
+    );
+    showToast("Medication updated", "success");
+  };
+
   // ─── Derived state ────────────────────────────────────────────────────────
   const currentChild = children.find((c) => c._id === selectedChildId);
   const trend = calculateTrend(temperatures);
@@ -282,6 +362,7 @@ export default function Home() {
             onSelectChild={setSelectedChildId}
             onDeleteRecord={handleDeleteRecord}
             onRenameRecord={handleRenameRecord}
+            onEditRecord={setEditingRecord}
           >
             {children}
           </ChildSelector>
@@ -331,6 +412,7 @@ export default function Home() {
               readings={temperatures}
               unit={temperaturePreference}
               onDeleteReading={handleDeleteTemperature}
+              onEditReading={setEditingReading}
             />
           </div>
 
@@ -360,6 +442,7 @@ export default function Home() {
                   medications={medications}
                   logsToday={logsToday}
                   onAddLog={handleAddMedicationLog}
+                  onEditMedication={setEditingMedication}
                 />
                 <button
                   onClick={() => setShowAddMedicationForm(true)}
@@ -375,6 +458,7 @@ export default function Home() {
               logs={medicationLogs}
               medications={medications}
               onDeleteLog={handleDeleteMedicationLog}
+              onEditLog={setEditingLog}
             />
           </div>
         </div>
@@ -385,6 +469,7 @@ export default function Home() {
           observations={observations}
           onAdd={handleAddObservation}
           onDelete={handleDeleteObservation}
+          onEdit={setEditingObservation}
         />
       </div>
 
@@ -400,6 +485,51 @@ export default function Home() {
             showToast("Medication added", "success");
           }}
           onClose={() => setShowAddMedicationForm(false)}
+        />
+      )}
+
+      {editingMedication && (
+        <AddMedicationForm
+          childId={selectedChildId}
+          medication={editingMedication}
+          onMedicationAdded={handleMedicationSaved}
+          onClose={() => setEditingMedication(null)}
+        />
+      )}
+
+      {editingRecord && (
+        <EditRecordForm
+          record={editingRecord}
+          onSave={handleUpdateRecord}
+          onClose={() => setEditingRecord(null)}
+        />
+      )}
+
+      {editingReading && (
+        <EditTemperatureForm
+          reading={editingReading}
+          onSave={handleUpdateReading}
+          onClose={() => setEditingReading(null)}
+        />
+      )}
+
+      {editingLog && (
+        <EditMedicationLogForm
+          log={editingLog}
+          medicationName={
+            medications.find((m) => m._id === editingLog.medicationDefinitionId)
+              ?.name ?? "Medication"
+          }
+          onSave={handleUpdateLog}
+          onClose={() => setEditingLog(null)}
+        />
+      )}
+
+      {editingObservation && (
+        <EditObservationForm
+          observation={editingObservation}
+          onSave={handleUpdateObservation}
+          onClose={() => setEditingObservation(null)}
         />
       )}
 

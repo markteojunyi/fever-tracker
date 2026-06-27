@@ -8,12 +8,14 @@ interface MedicationHistoryProps {
   logs: MedicationLog[];
   medications: MedicationDefinition[];
   onDeleteLog: (logId: string) => void;
+  onEditLog: (log: MedicationLog) => void;
 }
 
 export default function MedicationHistory({
   logs,
   medications,
   onDeleteLog,
+  onEditLog,
 }: MedicationHistoryProps) {
   const [isClient, setIsClient] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -104,14 +106,35 @@ export default function MedicationHistory({
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => handleDeleteClick(log._id!)}
-                    disabled={isDeleting}
-                    className="text-rose-400 hover:text-rose-600 transition-colors text-lg disabled:opacity-40"
-                    title="Delete"
-                  >
-                    {isDeleting ? "…" : "🗑"}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => onEditLog(log)}
+                      className="text-slate-400 hover:text-indigo-600 transition-colors"
+                      title="Edit"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(log._id!)}
+                      disabled={isDeleting}
+                      className="text-rose-400 hover:text-rose-600 transition-colors text-lg disabled:opacity-40"
+                      title="Delete"
+                    >
+                      {isDeleting ? "…" : "🗑"}
+                    </button>
+                  </>
                 )}
               </div>
             </div>

@@ -50,3 +50,48 @@ export const POST = withHandler(async (req: NextRequest, userId: string) => {
 
   return NextResponse.json(medication, { status: 201 });
 });
+
+export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const medication = await MedicationDefinition.findById(id);
+  if (!medication)
+    return NextResponse.json(
+      { error: "Medication not found" },
+      { status: 404 }
+    );
+
+  const child = await requireOwnedChild(medication.childId?.toString(), userId);
+  if (isOwnershipError(child)) return child;
+
+  const body = await req.json();
+  const update: {
+    name?: string;
+    dosage?: number;
+    dosageUnit?: "pills" | "ml";
+    frequency?: number;
+    maxDosesPerDay?: number;
+    maxTotalDailyDosage?: number | null;
+    startDate?: string;
+    endDate?: string | null;
+    isActive?: boolean;
+  } = {};
+  if (body.name !== undefined) update.name = body.name;
+  if (body.dosage !== undefined) update.dosage = body.dosage;
+  if (body.dosageUnit !== undefined) update.dosageUnit = body.dosageUnit;
+  if (body.frequency !== undefined) update.frequency = body.frequency;
+  if (body.maxDosesPerDay !== undefined)
+    update.maxDosesPerDay = body.maxDosesPerDay;
+  if (body.maxTotalDailyDosage !== undefined)
+    update.maxTotalDailyDosage = body.maxTotalDailyDosage;
+  if (body.startDate !== undefined) update.startDate = body.startDate;
+  if (body.endDate !== undefined) update.endDate = body.endDate || null;
+  if (body.isActive !== undefined) update.isActive = body.isActive;
+
+  const updated = await MedicationDefinition.findByIdAndUpdate(id, update, {
+    new: true,
+    runValidators: true,
+  });
+  return NextResponse.json(updated);
+});

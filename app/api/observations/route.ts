@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withHandler } from "@/lib/api/withHandler";
+import { isOwnershipError, requireOwnedChild } from "@/lib/api/ownership";
 import Observation from "@/lib/models/Observation";
 import Child from "@/lib/models/Child";
 
@@ -36,6 +37,37 @@ export const POST = withHandler(async (req: NextRequest) => {
   });
 
   return NextResponse.json(observation, { status: 201 });
+});
+
+export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const observation = await Observation.findById(id);
+  if (!observation)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const child = await requireOwnedChild(
+    observation.childId?.toString(),
+    userId
+  );
+  if (isOwnershipError(child)) return child;
+
+  const { content, observedAt } = await req.json();
+  if (content !== undefined && !content?.trim())
+    return NextResponse.json(
+      { error: "content cannot be empty" },
+      { status: 400 }
+    );
+
+  const update: { content?: string; observedAt?: Date } = {};
+  if (content !== undefined) update.content = content.trim();
+  if (observedAt !== undefined) update.observedAt = new Date(observedAt);
+
+  const updated = await Observation.findByIdAndUpdate(id, update, {
+    new: true,
+  });
+  return NextResponse.json(updated);
 });
 
 export const DELETE = withHandler(async (req: NextRequest) => {

@@ -24,18 +24,22 @@ export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const { name } = await req.json();
+  const body = await req.json();
+  const { name, dateOfBirth, weight } = body;
   if (!name)
     return NextResponse.json({ error: "name required" }, { status: 400 });
+
+  const update: { name: string; dateOfBirth?: string; weight?: number | null } =
+    { name };
+  if (dateOfBirth !== undefined) update.dateOfBirth = dateOfBirth;
+  if (weight !== undefined) update.weight = weight === null ? null : weight;
 
   // Ownership is enforced by the { userId } filter — findOneAndUpdate returns
   // null (-> 404) if the record isn't owned. No separate pre-check needed,
   // which saves one cross-region round-trip (Atlas SG <-> Netlify Ohio).
-  const updated = await Child.findOneAndUpdate(
-    { _id: id, userId },
-    { name },
-    { new: true }
-  );
+  const updated = await Child.findOneAndUpdate({ _id: id, userId }, update, {
+    new: true,
+  });
   if (!updated)
     return NextResponse.json({ error: "Record not found" }, { status: 404 });
 

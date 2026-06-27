@@ -10,6 +10,7 @@ interface MedicationEntryProps {
   medications: MedicationDefinition[];
   logsToday: MedicationLog[];
   onAddLog: (log: MedicationLog) => void;
+  onEditMedication: (medication: MedicationDefinition) => void;
 }
 
 export default function MedicationEntry({
@@ -17,6 +18,7 @@ export default function MedicationEntry({
   medications,
   logsToday,
   onAddLog,
+  onEditMedication,
 }: MedicationEntryProps) {
   const [selectedMedId, setSelectedMedId] = useState("");
   const [dosage, setDosage] = useState("");
@@ -103,9 +105,18 @@ export default function MedicationEntry({
       )}
 
       <div className="mb-3">
-        <label className="block text-xs font-semibold text-slate-500 mb-1">
-          Medication
-        </label>
+        <div className="flex justify-between items-center mb-1">
+          <label className="block text-xs font-semibold text-slate-500">
+            Medication
+          </label>
+          <button
+            type="button"
+            onClick={() => onEditMedication(selectedMed)}
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+          >
+            Edit details
+          </button>
+        </div>
         <select
           value={selectedMedId}
           onChange={(e) => setSelectedMedId(e.target.value)}

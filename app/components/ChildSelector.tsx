@@ -9,6 +9,7 @@ interface ChildSelectorProps {
   onSelectChild: (childId: string) => void;
   onDeleteRecord: (id: string) => void;
   onRenameRecord: (id: string, newName: string) => void;
+  onEditRecord: (child: Child) => void;
 }
 
 export default function ChildSelector({
@@ -17,6 +18,7 @@ export default function ChildSelector({
   onSelectChild,
   onDeleteRecord,
   onRenameRecord,
+  onEditRecord,
 }: ChildSelectorProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -163,6 +165,15 @@ export default function ChildSelector({
                       className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                     >
                       Rename
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (selected) onEditRecord(selected);
+                        setPopoverOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      Edit details
                     </button>
                   </>
                 )}

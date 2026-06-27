@@ -113,6 +113,34 @@ export function formatDateTime(isoString: string): string {
 }
 
 /**
+ * Convert an ISO timestamp to a value usable by <input type="datetime-local">
+ * (local time, "YYYY-MM-DDTHH:mm").
+ */
+export function toDateTimeLocal(isoString: string): string {
+  const d = new Date(isoString);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * Convert a <input type="datetime-local"> value (local time) back to an ISO string.
+ */
+export function fromDateTimeLocal(localValue: string): string {
+  return new Date(localValue).toISOString();
+}
+
+/**
+ * Convert an ISO timestamp to a value usable by <input type="date"> ("YYYY-MM-DD").
+ */
+export function toDateInput(isoString: string): string {
+  const d = new Date(isoString);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
  * Check overdose risk
  */
 export function checkOverdoseRisk(

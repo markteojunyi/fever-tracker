@@ -30,6 +30,37 @@ export const POST = withHandler(async (req: NextRequest, userId: string) => {
   return NextResponse.json(reading, { status: 201 });
 });
 
+export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const reading = await TemperatureReading.findById(id);
+  if (!reading)
+    return NextResponse.json({ error: "Record not found" }, { status: 404 });
+
+  const child = await requireOwnedChild(reading.childId?.toString(), userId);
+  if (isOwnershipError(child)) return child;
+
+  const body = await req.json();
+  const update: {
+    temperature?: number;
+    temperatureUnit?: "C" | "F";
+    timestamp?: string;
+    notes?: string | null;
+  } = {};
+  if (body.temperature !== undefined) update.temperature = body.temperature;
+  if (body.temperatureUnit !== undefined)
+    update.temperatureUnit = body.temperatureUnit;
+  if (body.timestamp !== undefined) update.timestamp = body.timestamp;
+  if (body.notes !== undefined) update.notes = body.notes || null;
+
+  const updated = await TemperatureReading.findByIdAndUpdate(id, update, {
+    new: true,
+    runValidators: true,
+  });
+  return NextResponse.json(updated);
+});
+
 export const DELETE = withHandler(async (req: NextRequest, userId: string) => {
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
