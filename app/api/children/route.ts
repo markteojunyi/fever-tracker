@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withHandler } from "@/lib/api/withHandler";
-import { isOwnershipError, requireOwnedChild } from "@/lib/api/ownership";
 import Child from "@/lib/models/Child";
 
 export const GET = withHandler(async (_req: NextRequest, userId: string) => {
@@ -25,13 +24,13 @@ export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const child = await requireOwnedChild(id, userId);
-  if (isOwnershipError(child)) return child;
-
   const { name } = await req.json();
   if (!name)
     return NextResponse.json({ error: "name required" }, { status: 400 });
 
+  // Ownership is enforced by the { userId } filter — findOneAndUpdate returns
+  // null (-> 404) if the record isn't owned. No separate pre-check needed,
+  // which saves one cross-region round-trip (Atlas SG <-> Netlify Ohio).
   const updated = await Child.findOneAndUpdate(
     { _id: id, userId },
     { name },

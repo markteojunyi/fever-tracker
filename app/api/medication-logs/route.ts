@@ -59,13 +59,18 @@ export const GET = withHandler(async (req: NextRequest, userId: string) => {
 
 export const POST = withHandler(async (req: NextRequest, userId: string) => {
   const body = await req.json();
-  const child = await requireOwnedChild(body.childId, userId);
-  if (isOwnershipError(child)) return child;
 
-  const medication = await MedicationDefinition.findOne({
-    _id: body.medicationDefinitionId,
-    childId: body.childId,
-  });
+  // Ownership check and medication lookup are independent, so run them in
+  // parallel — turns two sequential cross-region round-trips into one
+  // (Atlas SG <-> Netlify Ohio). Ownership is still fully enforced below.
+  const [child, medication] = await Promise.all([
+    requireOwnedChild(body.childId, userId),
+    MedicationDefinition.findOne({
+      _id: body.medicationDefinitionId,
+      childId: body.childId,
+    }),
+  ]);
+  if (isOwnershipError(child)) return child;
 
   if (!medication)
     return NextResponse.json(
