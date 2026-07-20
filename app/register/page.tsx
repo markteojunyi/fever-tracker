@@ -79,9 +79,13 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className={labelClass}>Name</label>
+              <label htmlFor="name" className={labelClass}>
+                Name
+              </label>
               <input
+                id="name"
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className={inputClass}
@@ -90,9 +94,13 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className={labelClass}>Email</label>
+              <label htmlFor="email" className={labelClass}>
+                Email
+              </label>
               <input
+                id="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={inputClass}
@@ -101,9 +109,14 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className={labelClass}>Password</label>
+              <label htmlFor="password" className={labelClass}>
+                Password
+              </label>
               <input
+                id="password"
                 type="password"
+                autoComplete="new-password"
+                minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={inputClass}
@@ -112,9 +125,14 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className={labelClass}>Confirm Password</label>
+              <label htmlFor="confirm-password" className={labelClass}>
+                Confirm Password
+              </label>
               <input
+                id="confirm-password"
                 type="password"
+                autoComplete="new-password"
+                minLength={6}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={inputClass}

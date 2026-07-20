@@ -1,7 +1,7 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import * as feverApi from "@/lib/services/feverApi";
 import { calculateTrend } from "@/lib/utils";
 import type {
@@ -86,6 +86,32 @@ export default function Home() {
     [showToast]
   );
 
+  // Tracks the child whose data was last requested, so a slow response for a
+  // previously selected child can't overwrite the current one, and so the
+  // selection effect doesn't re-fetch what bootstrap already loaded.
+  const loadTargetRef = useRef("");
+
+  const loadChildData = useCallback(
+    async (childId: string) => {
+      loadTargetRef.current = childId;
+      const [temps, meds, logs, obs] = await Promise.allSettled([
+        feverApi.getTemperatures(childId),
+        feverApi.getMedications(childId),
+        feverApi.getMedicationLogs(childId),
+        feverApi.getObservations(childId),
+      ]);
+      if (loadTargetRef.current !== childId) return; // a newer switch won
+      if (temps.status === "fulfilled") setTemperatures(temps.value);
+      if (meds.status === "fulfilled") setMedications(meds.value);
+      if (logs.status === "fulfilled") setMedicationLogs(logs.value);
+      if (obs.status === "fulfilled") setObservations(obs.value);
+      if ([temps, meds, logs, obs].some((r) => r.status === "rejected")) {
+        showToast("Some data failed to load. Try switching records.", "error");
+      }
+    },
+    [showToast]
+  );
+
   // ─── Bootstrap ───────────────────────────────────────────────────────────
   useEffect(() => {
     const bootstrap = async () => {
@@ -108,25 +134,17 @@ export default function Home() {
       }
     };
     bootstrap();
-  }, []);
-
-  const loadChildData = async (childId: string) => {
-    const [temps, meds, logs, obs] = await Promise.allSettled([
-      feverApi.getTemperatures(childId),
-      feverApi.getMedications(childId),
-      feverApi.getMedicationLogs(childId),
-      feverApi.getObservations(childId),
-    ]);
-    if (temps.status === "fulfilled") setTemperatures(temps.value);
-    if (meds.status === "fulfilled") setMedications(meds.value);
-    if (logs.status === "fulfilled") setMedicationLogs(logs.value);
-    if (obs.status === "fulfilled") setObservations(obs.value);
-  };
+  }, [loadChildData]);
 
   useEffect(() => {
-    if (!selectedChildId) return;
+    if (!selectedChildId || loadTargetRef.current === selectedChildId) return;
+    // Clear the previous child's data so it never shows under the new name.
+    setTemperatures([]);
+    setMedications([]);
+    setMedicationLogs([]);
+    setObservations([]);
     loadChildData(selectedChildId);
-  }, [selectedChildId]);
+  }, [selectedChildId, loadChildData]);
 
   // ─── Handlers (Facade + Template Method) ─────────────────────────────────
 
@@ -387,6 +405,7 @@ export default function Home() {
             </div>
             <button
               onClick={() => setJustAddedChild("")}
+              aria-label="Dismiss"
               className="text-indigo-300 hover:text-indigo-500 text-lg leading-none ml-4"
             >
               ×

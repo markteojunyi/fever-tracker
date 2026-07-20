@@ -34,6 +34,7 @@ export default function Modal({ title, onClose, children }: ModalProps) {
           <h2 className="text-base font-bold text-slate-800">{title}</h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="text-slate-400 hover:text-slate-600 text-xl leading-none"
           >
             ×
