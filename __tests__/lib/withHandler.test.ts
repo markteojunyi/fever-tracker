@@ -92,7 +92,6 @@ describe("withHandler", () => {
 
   it("returns 'Internal server error' for non-Error throws", async () => {
     const handler = withHandler(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-throw-literal
       throw "a plain string error";
     });
 

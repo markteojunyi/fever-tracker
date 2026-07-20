@@ -48,9 +48,17 @@ describe("GET /api/children", () => {
   });
 
   it("returns all children sorted by createdAt descending", async () => {
-    await Child.create({ name: "First", dateOfBirth: new Date("2020-01-01") });
+    await Child.create({
+      userId: "test-user-id",
+      name: "First",
+      dateOfBirth: new Date("2020-01-01"),
+    });
     await new Promise((r) => setTimeout(r, 5)); // ensure distinct createdAt
-    await Child.create({ name: "Second", dateOfBirth: new Date("2021-06-15") });
+    await Child.create({
+      userId: "test-user-id",
+      name: "Second",
+      dateOfBirth: new Date("2021-06-15"),
+    });
 
     const body = await (await GET(get("/api/children"))).json();
     expect(body).toHaveLength(2);
@@ -59,7 +67,11 @@ describe("GET /api/children", () => {
   });
 
   it("includes _id, name, dateOfBirth in each record", async () => {
-    await Child.create({ name: "Emma", dateOfBirth: new Date("2019-03-10") });
+    await Child.create({
+      userId: "test-user-id",
+      name: "Emma",
+      dateOfBirth: new Date("2019-03-10"),
+    });
     const [child] = await (await GET(get("/api/children"))).json();
     expect(child._id).toBeTruthy();
     expect(child.name).toBe("Emma");
@@ -111,6 +123,7 @@ describe("POST /api/children", () => {
 describe("PATCH /api/children", () => {
   it("renames a child and returns the updated record", async () => {
     const child = await Child.create({
+      userId: "test-user-id",
       name: "Old Name",
       dateOfBirth: new Date("2020-01-01"),
     });
@@ -123,6 +136,7 @@ describe("PATCH /api/children", () => {
 
   it("persists the new name in the database", async () => {
     const child = await Child.create({
+      userId: "test-user-id",
       name: "Before",
       dateOfBirth: new Date("2020-01-01"),
     });
@@ -138,6 +152,7 @@ describe("PATCH /api/children", () => {
 
   it("returns 400 when name is missing from body", async () => {
     const child = await Child.create({
+      userId: "test-user-id",
       name: "Test",
       dateOfBirth: new Date("2020-01-01"),
     });
@@ -159,6 +174,7 @@ describe("PATCH /api/children", () => {
 describe("DELETE /api/children", () => {
   it("deletes a child and returns 200", async () => {
     const child = await Child.create({
+      userId: "test-user-id",
       name: "Delete Me",
       dateOfBirth: new Date("2020-01-01"),
     });
@@ -168,6 +184,7 @@ describe("DELETE /api/children", () => {
 
   it("removes the record from the database", async () => {
     const child = await Child.create({
+      userId: "test-user-id",
       name: "Gone",
       dateOfBirth: new Date("2020-01-01"),
     });

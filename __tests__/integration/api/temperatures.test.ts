@@ -38,6 +38,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await clearTestDB();
   const child = await Child.create({
+    userId: "test-user-id",
     name: "Emma",
     dateOfBirth: new Date("2019-01-01"),
   });
@@ -109,6 +110,7 @@ describe("GET /api/temperatures", () => {
 
   it("does not return readings belonging to a different child", async () => {
     const other = await Child.create({
+      userId: "test-user-id",
       name: "Other",
       dateOfBirth: new Date("2020-01-01"),
     });
@@ -216,9 +218,9 @@ describe("DELETE /api/temperatures", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 200 even for a non-existent id (findByIdAndDelete is idempotent)", async () => {
+  it("returns 404 for a non-existent id (ownership-scoped delete)", async () => {
     const fakeId = new mongoose.Types.ObjectId();
     const res = await DELETE(del(`/api/temperatures?id=${fakeId}`));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(404);
   });
 });

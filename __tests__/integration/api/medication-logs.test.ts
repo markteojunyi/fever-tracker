@@ -40,6 +40,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await clearTestDB();
   const child = await Child.create({
+    userId: "test-user-id",
     name: "Emma",
     dateOfBirth: new Date("2019-01-01"),
   });
@@ -101,6 +102,7 @@ describe("GET /api/medication-logs", () => {
 
   it("does not return logs for a different child", async () => {
     const other = await Child.create({
+      userId: "test-user-id",
       name: "Other",
       dateOfBirth: new Date("2020-01-01"),
     });
@@ -156,9 +158,9 @@ describe("POST /api/medication-logs", () => {
     expect((await res.json()).notes).toBe("With food");
   });
 
-  it("returns 500 when required fields are missing", async () => {
+  it("returns 404 when the medication definition is missing", async () => {
     const res = await POST(post("/api/medication-logs", { childId }));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
   });
 });
 

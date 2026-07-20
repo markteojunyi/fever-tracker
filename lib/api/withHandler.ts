@@ -25,9 +25,13 @@ const TIMING = true;
 let coldStart = true;
 
 function formatError(error: unknown, req: NextRequest): NextResponse {
-  const message =
-    error instanceof Error ? error.message : "Internal server error";
   console.error(`[API Error] ${req.method} ${req.nextUrl.pathname}:`, error);
+  // Never expose internal error details (Mongoose messages, stack info) to
+  // clients in production; full details go to logs/Sentry above.
+  const message =
+    process.env.NODE_ENV !== "production" && error instanceof Error
+      ? error.message
+      : "Internal server error";
   return NextResponse.json({ error: message }, { status: 500 });
 }
 

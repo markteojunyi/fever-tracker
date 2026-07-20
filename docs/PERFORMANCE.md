@@ -7,10 +7,10 @@ This doc explains **why**, how to **measure** it, and what was changed.
 
 The database and the app server are on opposite sides of the Pacific:
 
-| Piece            | Location                  |
-| ---------------- | ------------------------- |
-| MongoDB Atlas    | **Singapore**             |
-| Netlify Functions | **Ohio (`us-east-2`)**   |
+| Piece             | Location               |
+| ----------------- | ---------------------- |
+| MongoDB Atlas     | **Singapore**          |
+| Netlify Functions | **Ohio (`us-east-2`)** |
 
 Every database query is a round-trip across that distance (~200 ms each way).
 API handlers that make **several sequential queries** multiply that latency.
@@ -23,13 +23,13 @@ optimistically so the wait isn't felt.
 Instrumentation lives in [`lib/api/withHandler.ts`](../lib/api/withHandler.ts),
 behind a `TIMING` flag. Each authenticated API request is split into phases:
 
-| Phase     | What it measures                | If it's high…                                  |
-| --------- | ------------------------------- | ---------------------------------------------- |
-| `auth`    | JWT session check               | unlikely (no DB hit with JWT sessions)         |
-| `connect` | DB connection / TLS handshake   | **cold start** — first request to a new server |
-| `handler` | the actual queries              | **region latency × number of round-trips**     |
-| `total`   | sum of the above                | overall request time on the server             |
-| `cold`    | `true` on a fresh server only   | tells you if `connect` cost was a cold start   |
+| Phase     | What it measures              | If it's high…                                  |
+| --------- | ----------------------------- | ---------------------------------------------- |
+| `auth`    | JWT session check             | unlikely (no DB hit with JWT sessions)         |
+| `connect` | DB connection / TLS handshake | **cold start** — first request to a new server |
+| `handler` | the actual queries            | **region latency × number of round-trips**     |
+| `total`   | sum of the above              | overall request time on the server             |
+| `cold`    | `true` on a fresh server only | tells you if `connect` cost was a cold start   |
 
 ### Option A — Browser (easiest)
 
@@ -67,9 +67,9 @@ behind a `TIMING` flag. Each authenticated API request is split into phases:
 
 Round-trips were reduced without weakening ownership/security checks:
 
-| Action                        | Before              | After               |
-| ----------------------------- | ------------------- | ------------------- |
-| Rename record (`PATCH /api/children`) | 2 round-trips | **1** |
+| Action                                    | Before        | After |
+| ----------------------------------------- | ------------- | ----- |
+| Rename record (`PATCH /api/children`)     | 2 round-trips | **1** |
 | Add med log (`POST /api/medication-logs`) | 3 round-trips | **2** |
 
 - **Rename**: dropped a redundant `findOne` ownership pre-check —
@@ -81,7 +81,7 @@ Still on the table (not yet done):
 
 - **Optimistic UI** in `app/page.tsx`: update the screen immediately and send
   the request in the background, so the round-trip isn't felt at all. This is
-  the biggest *perceived* speed win.
+  the biggest _perceived_ speed win.
 - **Observations routes** (`GET/POST/DELETE /api/observations`) have a separate
   **data-isolation gap** (they don't filter by `userId`) — fix that before
   optimizing them.

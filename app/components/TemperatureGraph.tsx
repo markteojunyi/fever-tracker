@@ -47,6 +47,35 @@ const CustomTick: React.FC<{
   );
 };
 
+const getDotColor = (temp: number, unit: "C" | "F") => {
+  const normalMax = unit === "C" ? 37.5 : 99.5;
+  const feverThreshold = unit === "C" ? 39 : 102.2;
+  if (temp > feverThreshold) return "#f43f5e";
+  if (temp > normalMax) return "#f97316";
+  return "#22c55e";
+};
+
+// Recharts clones the dot element and injects cx/cy/payload.
+const CustomDot = (props: {
+  cx?: number;
+  cy?: number;
+  payload?: { temperature: number };
+  unit?: "C" | "F";
+}) => {
+  const { cx, cy, payload, unit = "C" } = props;
+  if (cx === undefined || cy === undefined || !payload) return null;
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={7}
+      fill={getDotColor(payload.temperature, unit)}
+      stroke="#fff"
+      strokeWidth={2}
+    />
+  );
+};
+
 export default function TemperatureGraph({
   readings,
   unit,
@@ -78,31 +107,6 @@ export default function TemperatureGraph({
 
   const normalMax = unit === "C" ? 37.5 : 99.5;
   const feverThreshold = unit === "C" ? 39 : 102.2;
-
-  const getDotColor = (temp: number) => {
-    if (temp > feverThreshold) return "#f43f5e";
-    if (temp > normalMax) return "#f97316";
-    return "#22c55e";
-  };
-
-  const CustomDot = (props: {
-    cx?: number;
-    cy?: number;
-    payload?: { temperature: number };
-  }) => {
-    const { cx, cy, payload } = props;
-    if (cx === undefined || cy === undefined || !payload) return null;
-    return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={7}
-        fill={getDotColor(payload.temperature)}
-        stroke="#fff"
-        strokeWidth={2}
-      />
-    );
-  };
 
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 mb-4">
@@ -165,7 +169,7 @@ export default function TemperatureGraph({
             dataKey="temperature"
             stroke="#6366f1"
             strokeWidth={2}
-            dot={<CustomDot />}
+            dot={<CustomDot unit={unit} />}
             activeDot={{ r: 6, fill: "#4f46e5" }}
             name="Temperature"
           />
@@ -192,7 +196,7 @@ export default function TemperatureGraph({
         <div className="space-y-1.5 max-h-48 overflow-y-auto">
           {[...sorted].reverse().map((r) => {
             const isConfirming = confirmingId === r._id;
-            const dotColor = getDotColor(r.temperature);
+            const dotColor = getDotColor(r.temperature, unit);
             return (
               <div
                 key={r._id}

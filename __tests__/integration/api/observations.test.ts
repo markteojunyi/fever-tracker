@@ -38,6 +38,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await clearTestDB();
   const child = await Child.create({
+    userId: "test-user-id",
     name: "Emma",
     dateOfBirth: new Date("2019-01-01"),
   });
@@ -93,6 +94,7 @@ describe("GET /api/observations", () => {
 
   it("does not return observations belonging to a different child", async () => {
     const other = await Child.create({
+      userId: "test-user-id",
       name: "Other",
       dateOfBirth: new Date("2020-01-01"),
     });

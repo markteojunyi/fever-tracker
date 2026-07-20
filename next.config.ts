@@ -6,10 +6,6 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   outputFileTracingRoot: path.join(__dirname),
 
-  env: {
-    MONGODB_URI: process.env.MONGODB_URI,
-  },
-
   async headers() {
     return [
       {
@@ -37,8 +33,10 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.ingest.us.sentry.io;",
+            // 'unsafe-eval' is only needed for webpack eval sourcemaps in dev.
+            value: `default-src 'self'; script-src 'self'${
+              process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""
+            } 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.ingest.us.sentry.io;`,
           },
         ],
       },

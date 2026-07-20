@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { MedicationDefinition, MedicationLog } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { checkOverdoseRisk } from "@/lib/utils";
@@ -26,31 +26,18 @@ export default function MedicationEntry({
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const hasInitialized = useRef(false);
-
-  useEffect(() => {
-    if (
-      !hasInitialized.current &&
-      medications.length > 0 &&
-      medications[0]._id
-    ) {
-      setSelectedMedId(medications[0]._id);
-      hasInitialized.current = true;
-      return;
-    }
-    if (medications.length > 0 && selectedMedId) {
-      const exists = medications.find((m) => m._id === selectedMedId);
-      if (!exists && medications[0]._id) setSelectedMedId(medications[0]._id);
-    }
-  }, [medications, selectedMedId]);
 
   if (medications.length === 0) return null;
 
-  const selectedMed = medications.find((m) => m._id === selectedMedId);
-  if (!selectedMed) return null;
+  // Derive the active medication: fall back to the first one when nothing is
+  // selected yet or the selected med was deleted. Avoids syncing state in an
+  // effect.
+  const selectedMed =
+    medications.find((m) => m._id === selectedMedId) ?? medications[0];
+  const activeMedId = selectedMed._id ?? "";
 
   const logsForMedToday = logsToday.filter(
-    (l) => l.medicationDefinitionId === selectedMedId
+    (l) => l.medicationDefinitionId === activeMedId
   );
   const overdoseRisk = checkOverdoseRisk(
     logsForMedToday.length,
@@ -72,7 +59,7 @@ export default function MedicationEntry({
 
     const newLog: MedicationLog = {
       id: uuidv4(),
-      medicationDefinitionId: selectedMedId,
+      medicationDefinitionId: activeMedId,
       childId,
       administeredAt: new Date().toISOString(),
       dosageAdministered: parseFloat(dosage),
@@ -118,7 +105,7 @@ export default function MedicationEntry({
           </button>
         </div>
         <select
-          value={selectedMedId}
+          value={activeMedId}
           onChange={(e) => setSelectedMedId(e.target.value)}
           className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
         >
