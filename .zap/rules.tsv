@@ -1,0 +1,5 @@
+10027	IGNORE	(Information Disclosure - Suspicious Comments: greps JS for words like TODO; framework noise)
+10049	IGNORE	(Non-Storable Content: no-store on authenticated health pages is intentional)
+10109	IGNORE	(Modern Web Application: informational only)
+10110	IGNORE	(Dangerous JS Functions: flags framework-internal chunks; prod CSP already blocks unsafe-eval)
+90004	IGNORE	(COEP header: cross-origin isolation not needed; enabling could break external images)

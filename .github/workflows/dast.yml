@@ -2,9 +2,13 @@ name: DAST (OWASP ZAP)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   zap_scan:
@@ -12,25 +16,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
-      # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # Step 4: Start Next.js app in the background
-      - name: Start Next.js app
-        run: npm run dev &
+      # Scan the production build, not the dev server: prod has the strict
+      # CSP (no unsafe-eval) and none of the dev-only webpack chunks that
+      # trigger false positives.
+      - name: Build app
+        run: npm run build
+        env:
+          MONGODB_URI: mongodb://localhost:27017/build-placeholder
+          AUTH_SECRET: ci-build-placeholder-secret
 
-      # Step 5: Wait until the app is reachable
+      - name: Start app
+        run: npm start &
+        env:
+          MONGODB_URI: mongodb://localhost:27017/build-placeholder
+          AUTH_SECRET: ci-build-placeholder-secret
+
       - name: Wait for app to be ready
         run: |
           echo "Waiting for http://localhost:3000 to be ready..."
@@ -44,9 +56,9 @@ jobs:
           echo "App did not start in time"
           exit 1
 
-      # Step 6: Run OWASP ZAP Baseline Scan
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
         with:
-          target: 'http://localhost:3000'
+          target: "http://localhost:3000"
+          rules_file_name: ".zap/rules.tsv"
           fail_action: true
