@@ -82,7 +82,7 @@ describe("POST /api/register", () => {
   it("returns 400 when required fields are missing", async () => {
     const res = await register(post("/api/register", { name: "Dave" }));
     expect(res.status).toBe(400);
-    expect((await res.json()).error).toMatch(/Missing/i);
+    expect((await res.json()).error).toMatch(/email/i);
   });
 
   it("returns 400 when password is shorter than 6 characters", async () => {

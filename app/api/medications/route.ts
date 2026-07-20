@@ -5,6 +5,11 @@ import {
   isOwnershipError,
   requireOwnedChild,
 } from "@/lib/api/ownership";
+import {
+  medicationCreateSchema,
+  medicationUpdateSchema,
+  parseBody,
+} from "@/lib/api/validation";
 import MedicationDefinition from "@/lib/models/MedicationDefinition";
 
 export const GET = withHandler(async (req: NextRequest, userId: string) => {
@@ -31,7 +36,10 @@ export const GET = withHandler(async (req: NextRequest, userId: string) => {
 });
 
 export const POST = withHandler(async (req: NextRequest, userId: string) => {
-  const body = await req.json();
+  const parsed = await parseBody(req, medicationCreateSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
+
   const child = await requireOwnedChild(body.childId, userId);
   if (isOwnershipError(child)) return child;
 
@@ -65,7 +73,10 @@ export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
   const child = await requireOwnedChild(medication.childId?.toString(), userId);
   if (isOwnershipError(child)) return child;
 
-  const body = await req.json();
+  const parsed = await parseBody(req, medicationUpdateSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
+
   const update: {
     name?: string;
     dosage?: number;

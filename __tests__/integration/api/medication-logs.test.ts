@@ -158,8 +158,20 @@ describe("POST /api/medication-logs", () => {
     expect((await res.json()).notes).toBe("With food");
   });
 
-  it("returns 404 when the medication definition is missing", async () => {
+  it("returns 400 when required fields are missing", async () => {
     const res = await POST(post("/api/medication-logs", { childId }));
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 when the medication definition does not exist", async () => {
+    const res = await POST(
+      post(
+        "/api/medication-logs",
+        logPayload({
+          medicationDefinitionId: new mongoose.Types.ObjectId().toString(),
+        })
+      )
+    );
     expect(res.status).toBe(404);
   });
 });

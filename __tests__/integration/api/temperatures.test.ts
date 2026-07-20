@@ -184,7 +184,7 @@ describe("POST /api/temperatures", () => {
         timestamp: new Date().toISOString(),
       })
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
   });
 });
 

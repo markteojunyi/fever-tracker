@@ -112,9 +112,9 @@ describe("POST /api/children", () => {
     expect(body.weight).toBe(12.5);
   });
 
-  it("returns 500 when required fields are missing", async () => {
+  it("returns 400 when required fields are missing", async () => {
     const res = await POST(post("/api/children", { name: "NoDate" }));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
   });
 });
 

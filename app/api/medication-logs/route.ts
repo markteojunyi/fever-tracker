@@ -5,6 +5,11 @@ import {
   isOwnershipError,
   requireOwnedChild,
 } from "@/lib/api/ownership";
+import {
+  medicationLogCreateSchema,
+  medicationLogUpdateSchema,
+  parseBody,
+} from "@/lib/api/validation";
 import MedicationLog from "@/lib/models/MedicationLog";
 import MedicationDefinition from "@/lib/models/MedicationDefinition";
 
@@ -58,7 +63,9 @@ export const GET = withHandler(async (req: NextRequest, userId: string) => {
 });
 
 export const POST = withHandler(async (req: NextRequest, userId: string) => {
-  const body = await req.json();
+  const parsed = await parseBody(req, medicationLogCreateSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   // Ownership check and medication lookup are independent, so run them in
   // parallel — turns two sequential cross-region round-trips into one
@@ -103,7 +110,10 @@ export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
   const child = await requireOwnedChild(log.childId?.toString(), userId);
   if (isOwnershipError(child)) return child;
 
-  const body = await req.json();
+  const parsed = await parseBody(req, medicationLogUpdateSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
+
   const update: {
     administeredAt?: string;
     dosageAdministered?: number;

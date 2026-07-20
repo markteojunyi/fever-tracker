@@ -5,6 +5,7 @@ import {
   isOwnershipError,
   requireOwnedChild,
 } from "@/lib/api/ownership";
+import { parseBody, reminderCreateSchema } from "@/lib/api/validation";
 import MedicationReminder from "@/lib/models/MedicationReminder";
 import MedicationDefinition from "@/lib/models/MedicationDefinition";
 
@@ -34,7 +35,9 @@ export const GET = withHandler(async (req: NextRequest, userId: string) => {
 });
 
 export const POST = withHandler(async (req: NextRequest, userId: string) => {
-  const body = await req.json();
+  const parsed = await parseBody(req, reminderCreateSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   const med = await MedicationDefinition.findById(body.medicationDefinitionId);
   if (!med)

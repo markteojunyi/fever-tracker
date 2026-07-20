@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withHandler } from "@/lib/api/withHandler";
+import {
+  childCreateSchema,
+  childUpdateSchema,
+  parseBody,
+} from "@/lib/api/validation";
 import Child from "@/lib/models/Child";
 
 export const GET = withHandler(async (_req: NextRequest, userId: string) => {
@@ -8,7 +13,9 @@ export const GET = withHandler(async (_req: NextRequest, userId: string) => {
 });
 
 export const POST = withHandler(async (req: NextRequest, userId: string) => {
-  const body = await req.json();
+  const parsed = await parseBody(req, childCreateSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   const child = await Child.create({
     userId,
@@ -24,10 +31,9 @@ export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const body = await req.json();
-  const { name, dateOfBirth, weight } = body;
-  if (!name)
-    return NextResponse.json({ error: "name required" }, { status: 400 });
+  const parsed = await parseBody(req, childUpdateSchema);
+  if (!parsed.ok) return parsed.response;
+  const { name, dateOfBirth, weight } = parsed.data;
 
   const update: { name: string; dateOfBirth?: string; weight?: number | null } =
     { name };

@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withHandler } from "@/lib/api/withHandler";
 import { isOwnershipError, requireOwnedChild } from "@/lib/api/ownership";
+import {
+  observationCreateSchema,
+  observationUpdateSchema,
+  parseBody,
+} from "@/lib/api/validation";
 import Observation from "@/lib/models/Observation";
-import Child from "@/lib/models/Child";
 
-export const GET = withHandler(async (req: NextRequest) => {
+export const GET = withHandler(async (req: NextRequest, userId: string) => {
   const childId = req.nextUrl.searchParams.get("childId");
   if (!childId)
     return NextResponse.json({ error: "childId required" }, { status: 400 });
 
-  const child = await Child.findById(childId);
-  if (!child) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const child = await requireOwnedChild(childId, userId);
+  if (isOwnershipError(child)) return child;
 
   const observations = await Observation.find({ childId }).sort({
     observedAt: -1,
@@ -18,17 +22,13 @@ export const GET = withHandler(async (req: NextRequest) => {
   return NextResponse.json(observations);
 });
 
-export const POST = withHandler(async (req: NextRequest) => {
-  const { childId, content, observedAt } = await req.json();
+export const POST = withHandler(async (req: NextRequest, userId: string) => {
+  const parsed = await parseBody(req, observationCreateSchema);
+  if (!parsed.ok) return parsed.response;
+  const { childId, content, observedAt } = parsed.data;
 
-  if (!childId || !content?.trim())
-    return NextResponse.json(
-      { error: "childId and content are required" },
-      { status: 400 }
-    );
-
-  const child = await Child.findById(childId);
-  if (!child) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const child = await requireOwnedChild(childId, userId);
+  if (isOwnershipError(child)) return child;
 
   const observation = await Observation.create({
     childId,
@@ -43,6 +43,10 @@ export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
+  const parsed = await parseBody(req, observationUpdateSchema);
+  if (!parsed.ok) return parsed.response;
+  const { content, observedAt } = parsed.data;
+
   const observation = await Observation.findById(id);
   if (!observation)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -52,13 +56,6 @@ export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
     userId
   );
   if (isOwnershipError(child)) return child;
-
-  const { content, observedAt } = await req.json();
-  if (content !== undefined && !content?.trim())
-    return NextResponse.json(
-      { error: "content cannot be empty" },
-      { status: 400 }
-    );
 
   const update: { content?: string; observedAt?: Date } = {};
   if (content !== undefined) update.content = content.trim();
@@ -70,13 +67,20 @@ export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
   return NextResponse.json(updated);
 });
 
-export const DELETE = withHandler(async (req: NextRequest) => {
+export const DELETE = withHandler(async (req: NextRequest, userId: string) => {
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const deleted = await Observation.findByIdAndDelete(id);
-  if (!deleted)
+  const observation = await Observation.findById(id);
+  if (!observation)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const child = await requireOwnedChild(
+    observation.childId?.toString(),
+    userId
+  );
+  if (isOwnershipError(child)) return child;
+
+  await Observation.findByIdAndDelete(id);
   return NextResponse.json({ success: true });
 });

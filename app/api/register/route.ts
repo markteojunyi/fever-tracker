@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { withPublicHandler } from "@/lib/api/withHandler";
+import { parseBody, registerSchema } from "@/lib/api/validation";
 import User from "@/models/User";
 
 export const POST = withPublicHandler(async (req: NextRequest) => {
-  const { name, email, password } = await req.json();
-
-  if (!name || !email || !password)
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 }
-    );
-
-  if (password.length < 6)
-    return NextResponse.json(
-      { error: "Password must be at least 6 characters" },
-      { status: 400 }
-    );
+  const parsed = await parseBody(req, registerSchema);
+  if (!parsed.ok) return parsed.response;
+  const { name, email, password } = parsed.data;
 
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing)

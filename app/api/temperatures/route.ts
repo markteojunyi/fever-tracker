@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withHandler } from "@/lib/api/withHandler";
 import { isOwnershipError, requireOwnedChild } from "@/lib/api/ownership";
+import {
+  parseBody,
+  temperatureCreateSchema,
+  temperatureUpdateSchema,
+} from "@/lib/api/validation";
 import TemperatureReading from "@/lib/models/TemperatureReading";
 
 export const GET = withHandler(async (req: NextRequest, userId: string) => {
@@ -15,7 +20,10 @@ export const GET = withHandler(async (req: NextRequest, userId: string) => {
 });
 
 export const POST = withHandler(async (req: NextRequest, userId: string) => {
-  const body = await req.json();
+  const parsed = await parseBody(req, temperatureCreateSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
+
   const child = await requireOwnedChild(body.childId, userId);
   if (isOwnershipError(child)) return child;
 
@@ -41,7 +49,10 @@ export const PATCH = withHandler(async (req: NextRequest, userId: string) => {
   const child = await requireOwnedChild(reading.childId?.toString(), userId);
   if (isOwnershipError(child)) return child;
 
-  const body = await req.json();
+  const parsed = await parseBody(req, temperatureUpdateSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
+
   const update: {
     temperature?: number;
     temperatureUnit?: "C" | "F";
